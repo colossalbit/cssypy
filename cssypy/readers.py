@@ -148,7 +148,7 @@ class EncodedReader(Reader):
                  default_encoding=defs.DEFAULT_ENCODING):
         super(EncodedReader, self).__init__(filename)
         self.source_encoding = source_encoding
-        self.default_encoding = default_encoding
+        self.default_encoding = default_encoding or defs.DEFAULT_ENCODING
         self._encoding = None
         self._charset_rule_required = False
         self._forced_encoding = source_encoding is not None
@@ -254,7 +254,7 @@ class FileReader(EncodedReader):
         # read as encoded stream
         with io.open(self.filename(), mode='rt', encoding=encoding) as f:
             # return unicode
-            return f.readall()
+            return f.read()
             
 
 #==============================================================================#

@@ -51,9 +51,10 @@ def _unescape_ident(m):
         return s
     raise RuntimeError()
     
-#
-# TODO: unescape_nmchar(), to handle things like HASH that don't use IDENT
-#
+def unescape_name(name):
+    # Identical to unescape_identifier(). Provided for symmetry with 
+    # escape_name().
+    return re_unescape_ident.sub(_unescape_ident, name)
 
 def unescape_identifier(ident):
     # \HEX{1,6}WS --> to_unicode(HEX{1,6})
@@ -67,7 +68,7 @@ def _escape_nmstart(m):
     s = m.group('digit')
     if s:
         cp = ord(s)
-        return '\\{0:06X}'.format(cp)  # return 6 chars so we don't have to worry about adding a trailing space
+        return u'\\{0:06X}'.format(cp)  # return 6 chars so we don't have to worry about adding a trailing space
     s = m.group('other')
     if s:
         return u'\\{}'.format(s)
@@ -79,9 +80,10 @@ def _escape_nmchar(m):
         return u'\\{}'.format(s)
     raise RuntimeError()
     
-#
-# TODO: escape_nmchar(), to handle things like HASH that don't use IDENT
-#
+def escape_name(name):
+    if not name:
+        return name
+    return re_escape_nmchar.sub(_escape_nmchar, name)
 
 def escape_identifier(ident):
     # [^-A-Za-z0-9_\xA0-\xFFFFFFFF] -> \CHAR
@@ -95,7 +97,7 @@ def escape_identifier(ident):
             re_escape_nmchar.sub(_escape_nmchar, ident[2:]),
         ))
     else:
-        return ''.join((
+        return u''.join((
             re_escape_nmstart.sub(_escape_nmstart, ident[:1]),
             re_escape_nmchar.sub(_escape_nmchar, ident[1:]),
         ))
@@ -150,13 +152,13 @@ def escape_string(s, quote_type='double'):
 def quote_string(s, quote_type=None):
     # Escape the contents of the string and add opening and closing quotes.
     if quote_type == 'double':
-        return '"{}"'.format(escape_string(s, quote_type))
+        return u'"{}"'.format(escape_string(s, quote_type))
     elif quote_type == 'single':
-        return "'{}'".format(escape_string(s, quote_type))
+        return u"'{}'".format(escape_string(s, quote_type))
     elif '"' in s:
-        return "'{}'".format(escape_string(s, 'single'))
+        return u"'{}'".format(escape_string(s, 'single'))
     else:
-        return '"{}"'.format(escape_string(s, 'double'))
+        return u'"{}"'.format(escape_string(s, 'double'))
     
 #==============================================================================#
 def css_unicode_error_handler(e):

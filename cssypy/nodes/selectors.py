@@ -1,5 +1,5 @@
 from .nodes import Node
-from ..utils import escapes
+from ..utils import stringutil
 
 #==============================================================================#
 class Selector(Node):
@@ -67,7 +67,7 @@ class TypeSelector(HeadSimpleSelector):
     def __init__(self, name, unescape=True):
         self.name = name
         if unescape:
-            self.name = escapes.unescape_identifier(self.name)
+            self.name = stringutil.unescape_identifier(self.name)
         
     def __eq__(self, other):
         if isinstance(other, TypeSelector):
@@ -91,7 +91,7 @@ class ClassSelector(TailSimpleSelector):
     def __init__(self, name, unescape=True):
         self.name = name
         if unescape:
-            self.name = escapes.unescape_identifier(self.name)
+            self.name = stringutil.unescape_identifier(self.name)
         
     def __eq__(self, other):
         if isinstance(other, ClassSelector):
@@ -142,7 +142,7 @@ class AttributeSelector(TailSimpleSelector):
         self.op = op
         self.val = val # IdentExpr or StringNode
         if unescape:
-            self.attr = escapes.unescape_identifier(self.attr)
+            self.attr = stringutil.unescape_identifier(self.attr)
         
     def __eq__(self, other):
         if isinstance(other, NegationSelector):

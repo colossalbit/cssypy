@@ -1,4 +1,4 @@
-from ..utils import escapes
+from ..utils import stringutil
 
 class Node(object):
     __slots__ = ()
@@ -19,7 +19,7 @@ class Charset(Node):
     def __init__(self, charset, unescape=True):
         self.charset = charset
         if unescape:
-            self.charset = escapes.unquote_string(self.charset)
+            self.charset = stringutil.unquote_string(self.charset)
         
 class Statement(Node):
     pass
@@ -61,7 +61,7 @@ class VarDef(Statement):
         self.name = name
         self.expr = expr
         if unescape:
-            self.name = escapes.unescape_identifier(self.name)
+            self.name = stringutil.unescape_identifier(self.name)
         
     def __eq__(self, other):
         if isinstance(other, VarDef):
@@ -74,7 +74,7 @@ class Property(Node):
     def __init__(self, name, unescape=True):
         self.name = name
         if unescape:
-            self.name = escapes.unescape_identifier(self.name)
+            self.name = stringutil.unescape_identifier(self.name)
         
     def __eq__(self, other):
         if isinstance(other, Property):
@@ -87,7 +87,7 @@ class Ident(Node):
     def __init__(self, name, unescape=True):
         self.name = name
         if unescape:
-            self.name = escapes.unescape_identifier(self.name)
+            self.name = stringutil.unescape_identifier(self.name)
         
     def __eq__(self, other):
         if isinstance(other, Ident):

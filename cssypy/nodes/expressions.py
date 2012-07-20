@@ -1,6 +1,6 @@
 from .nodes import Node, Ident
 from .values import CSSValueNode
-from ..utils import escapes
+from ..utils import stringutil
         
 class Expr(Node):
     pass
@@ -15,7 +15,7 @@ class VarName(Expr):
             name = name[1:]
         self.name = name
         if unescape:
-            self.name = escapes.unescape_identifier(self.name)
+            self.name = stringutil.unescape_identifier(self.name)
         
     def __eq__(self, other):
         if isinstance(other, VarName):
@@ -36,7 +36,7 @@ class FunctionExpr(Expr):
         self.name = name[:-1]
         self.expr = expr
         if unescape:
-            self.name = escapes.unescape_identifier(self.name)
+            self.name = stringutil.unescape_identifier(self.name)
         
     def __eq__(self, other):
         if isinstance(other, Function):

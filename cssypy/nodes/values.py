@@ -1,7 +1,7 @@
 import re
 
 from .. import datatypes
-from ..utils import escapes
+from ..utils import stringutil
 from .nodes import Node
 
 
@@ -58,7 +58,7 @@ class DimensionNode(CSSValueNode):
                 raise ValueError()
             unit = m.group('unit')
             if unescape:
-                unit = escapes.unescape_identifier(unit)
+                unit = stringutil.unescape_identifier(unit)
             self.unit = unit.lower()
             self.number = m.group('num')
         elif isinstance(value, datatypes.Dimension):
@@ -77,7 +77,8 @@ class DimensionNode(CSSValueNode):
         return datatypes.Dimension(float(self.number), self.unit)
         
     def to_css(self):
-        return u'{0}{1}'.format(self.number, self.unit)
+        return u'{0}{1}'.format(self.number, 
+                                stringutil.escape_identifier(self.unit))
         
     def __eq__(self, other):
         if isinstance(other, DimensionNode):
@@ -157,14 +158,14 @@ class StringNode(CSSValueNode):
         if isinstance(string, basestring):
             self.string = string
             if unescape:
-                self.string = escapes.unquote_string(self.string)
+                self.string = stringutil.unquote_string(self.string)
         elif isinstance(string, datatypes.String):
             self.string = str(string)
         else:
             raise ValueError()  # TODO
             
     def to_css(self):
-        return escapes.quote_string(self.string)
+        return stringutil.quote_string(self.string)
     
 class UriNode(CSSValueNode):
     pass

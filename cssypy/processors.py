@@ -7,10 +7,10 @@ from .visitors import (formatters as formattervisitors,
                        solvers as solvervisitors,
                        importers as importervisitors)
 from . import parsers, defs, errors
-from .utils import reporters, escapes
+from .utils import reporters, stringutil
 
 #==============================================================================#
-escapes.register_unicode_handlers()
+stringutil.register_unicode_handlers()
 
 #==============================================================================#
 class Importer(object):

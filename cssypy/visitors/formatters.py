@@ -1,5 +1,6 @@
 from .base import NodeVisitor
 from .. import nodes
+from ..utils import stringutil
 
 
 #==============================================================================#
@@ -106,7 +107,7 @@ class CSSFormatterVisitor(NodeVisitor):
             self.visit(child)
         
     def visit_Property(self, node):
-        self.write(node.name)
+        self.write(stringutil.escape_identifier(node.name))
         
     def visit_UnaryOpExpr(self, node):
         self.visit(node.op)
@@ -145,17 +146,17 @@ class CSSFormatterVisitor(NodeVisitor):
         
     # Names...
     def visit_Ident(self, node):
-        self.write(node.name)
+        self.write(stringutil.escape_identifier(node.name))
         
     def visit_IdentExpr(self, node):
         self.write(node.name)
         
     def visit_VarName(self, node):
         self.write(u'$')
-        self.write(node.name)
+        self.write(stringutil.escape_identifier(node.name))
         
     def visit_FunctionExpr(self, node):
-        self.write(node.name)
+        self.write(stringutil.escape_identifier(node.name))
         self.write(u'(')
         self.visit(node.expr)
         self.write(u')')
@@ -163,14 +164,14 @@ class CSSFormatterVisitor(NodeVisitor):
     # Selectors...
     def visit_IdSelector(self, node):
         self.write(u'#')
-        self.write(node.name)
+        self.write(stringutil.escape_name(node.name))
         
     def visit_ClassSelector(self, node):
         self.write(u'.')
         self.write(node.name)
         
     def visit_TypeSelector(self, node):
-        self.write(node.name)
+        self.write(stringutil.escape_identifier(node.name))
         
     def visit_UniversalSelector(self, node):
         self.write(u'*')
@@ -193,7 +194,7 @@ class CSSFormatterVisitor(NodeVisitor):
         
     def visit_AttributeSelector(self, node):
         self.write(u'[')
-        self.write(node.attr)
+        self.write(stringutil.escape_identifier(node.attr))
         if node.op:
             assert node.val
             self.visit(node.op)

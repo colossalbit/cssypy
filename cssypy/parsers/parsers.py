@@ -1,15 +1,15 @@
 from .. import nodes, errors, csstokens as tokens
-from ..utils import escapes
+from ..utils import stringutil
 from . import base
 
 def _create_string_node(value):
-    return nodes.StringNode(escapes.unquote_string(value))
+    return nodes.StringNode(stringutil.unquote_string(value))
 
 def _create_ident_node(value):
-    return nodes.Ident(escapes.unescape_identifier(value))
+    return nodes.Ident(stringutil.unescape_identifier(value))
 
 def _create_ident_expr_node(value):
-    return nodes.IdentExpr(escapes.unescape_identifier(value))
+    return nodes.IdentExpr(stringutil.unescape_identifier(value))
 
 
 class Parser(base.ParserBase):
