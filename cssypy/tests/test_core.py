@@ -108,6 +108,20 @@ class CompileString_TestCase(base.TestCaseBase):
         r = core.compile_string(src)
         self.assertEqual(u'selector { a: -5; }', normalize(r))
         
+    def test_vardef1(self):
+        src = u'$x: 8;'
+        r = core.compile_string(src)
+        self.assertEqual(u'', normalize(r))
+        
+    def test_vardef2(self):
+        src = u'$x: 8 ;'
+        r = core.compile_string(src)
+        self.assertEqual(u'', normalize(r))
+        
+    def test_varref(self):
+        src = u'$x: 8;\nselector { a: $x; }'
+        r = core.compile_string(src)
+        self.assertEqual(u'selector { a: 8; }', normalize(r))
 
 #==============================================================================#
 class CompileString_NoSolvers_TestCase(base.TestCaseBase):

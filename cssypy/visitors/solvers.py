@@ -1,8 +1,10 @@
 import operator
+import itertools
 
 from .base import NodeTransformer
-from .. import nodes
+from .. import nodes, errors
 
+ifilter = itertools.ifilter
 
 #==============================================================================#
 class ScopeContext(object):
@@ -53,7 +55,7 @@ class Namespace(object):
             except KeyError:
                 pass
         # TODO: should this raise an exception or return a sentinel value?
-        raise RuntimeError('name not found')
+        raise KeyError('name not found')
         
     def __setitem__(self, name, value):
         self.scopes[-1][name] = value
@@ -114,19 +116,23 @@ class Solver(NodeTransformer):
     def visit_Stylesheet(self, node):
         # new namespace
         with self.namespace():
-            node.statements = [self.visit(stmt) for stmt in node.statements]
+            node.statements = list(ifilter(bool, (self.visit(stmt) for stmt in node.statements)))
+        return node
+        
+    def visit_ImportedStylesheet(self, node):
+        # new namespace
+        with self.namespace():
+            node.statements = list(ifilter(bool, (self.visit(stmt) for stmt in node.statements)))
         return node
         
     def visit_RuleSet(self, node):
         # new scope
         with self.scope():
-            ##with self.selector_context():
-            node.selectors = [self.visit(sel) for sel in node.selectors]
-            node.statements = [self.visit(stmt) for stmt in node.statements]
+            node.selectors = list(ifilter(bool, (self.visit(sel) for sel in node.selectors)))
+            node.statements = list(ifilter(bool, (self.visit(stmt) for stmt in node.statements)))
         return node
                 
     def visit_Declaration(self, node):
-        ##with self.declaration_context():
         node.property = self.visit(node.property)
         node.expr = self.value_as_node(self.visit(node.expr))
         return node
@@ -139,14 +145,14 @@ class Solver(NodeTransformer):
         self.assign_variable(name, value)
         return None
         
-    def visit_VarRef(self, node):
+    def visit_VarName(self, node):
         # TODO: Replace VarRef with appropriate node.
         #       But, for that we need to know context.  e.g. in a selector, a hash becomes an IdSelector -- in a declaration, a hash becomes a HexColor.
-        return node
-        
-    def visit_Expr(self, node):
-        # TODO: Compute arithmetic and function calls
-        return node
+        # TODO: handle unknown name errors
+        try:
+            return self.retrieve_variable(node.name)
+        except KeyError:
+            raise errors.CSSVarNameError()
         
     def visit_UnaryOpExpr(self, node):
         # TODO: handle TypeError 'bad operand type for ...' exceptions
@@ -156,7 +162,7 @@ class Solver(NodeTransformer):
         elif isinstance(node.op, nodes.UPlus):
             return operator.pos(self.node_as_value(operand))
         else:
-            raise RuntimeError()  # TODO
+            raise RuntimeError()  # pragma: no cover
             
     _binop_map = {
         nodes.AddOp(): operator.add,
@@ -174,25 +180,11 @@ class Solver(NodeTransformer):
         try:
             return self._binop_map[node.op](self.node_as_value(lhs), self.node_as_value(rhs))
         except KeyError:
-            raise RuntimeError()  # TODO
-        # elif isinstance(node.op, nodes.AddOp):
-            # return self.node_as_value(lhs) + self.node_as_value(rhs)
-        # elif isinstance(node.op, nodes.MultOp):
-            # return self.node_as_value(lhs) * self.node_as_value(rhs)
-        # elif isinstance(node.op, nodes.SubtractOp):
-            # return self.node_as_value(lhs) - self.node_as_value(rhs)
-        # elif isinstance(node.op, nodes.DivisionOp):
-            # return self.node_as_value(lhs) / self.node_as_value(rhs)
-        # else:
-            # raise RuntimeError()
+            raise RuntimeError()  # pragma: no cover
         
     def visit_NaryOpExpr(self, node):
-        newoperands = []
-        for operand in node.operands:
-            result = self.visit(operand)
-            result = self.value_as_node(result)
-            newoperands.append(result)
-        node.operands = newoperands
+        ##node.operands = [self.value_as_node(self.visit(operand)) for operand in node.operands]
+        node.operands = list(ifilter(bool, (self.visit(operand) for operand in node.operands)))
         return node
         
     def visit_Function(self, node):

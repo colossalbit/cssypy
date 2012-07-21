@@ -118,6 +118,8 @@ class Parser(base.ParserBase):
         
         if not self.match(tokens.EOF):
             # error, didn't parse entire file
+            for stmt in statements:
+                print nodes.debug_tostring(stmt)
             raise self.syntax_error("Expected end-of-file.")
         
         return nodes.Stylesheet(charset, imports, statements)
@@ -173,6 +175,7 @@ class Parser(base.ParserBase):
                 peeker.skip_ws()
                 if peeker.peek().type != tokens.EOF:
                     raise self.syntax_error("Variable definitions must end with a semicolon.")
+            self.skip_ws()
         elif tok.type == tokens.MEDIA_SYM:
             # TODO: @media
             pass

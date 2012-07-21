@@ -59,4 +59,7 @@ class CSSEncodingNotFound(CSSError):
     
 class CSSTypeError(CSSError):
     pass
+    
+class CSSVarNameError(CSSError):
+    pass
 

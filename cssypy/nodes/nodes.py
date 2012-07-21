@@ -78,7 +78,8 @@ class VarDef(Statement):
             
     @classmethod
     def from_string(cls, string, expr):
-        return cls(name=stringutil.unescape_identifier(string), expr=expr)
+        assert string and string[0] == '$'
+        return cls(name=stringutil.unescape_identifier(string[1:]), expr=expr)
         
     def __eq__(self, other):
         if isinstance(other, VarDef):

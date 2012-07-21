@@ -70,6 +70,7 @@ class RulesetFlattener(NodeTransformer):
     def visit(self, node):
         # All visits of RuleSets should be done by calling self.visit_RuleSet 
         # directly from their parent nodes.
+        assert node is not None
         assert not isinstance(node, nodes.RuleSet)
         return super(RulesetFlattener, self).visit(node)
         
