@@ -89,12 +89,12 @@ badcomment = r'(?:{badcomment1}|{badcomment2})'.format(badcomment1=badcomment1, 
 
 # uri
 url = r'(?:(?:[!#$%&*-\[\]-~]|{nonascii}|{escape})*)'.format(nonascii=nonascii, escape=escape)
-uri1 = r'(?:url\({w}{string}{w}\))'.format(w=w, string=string)
-uri2 = r'(?:url\({w}{url}{w}\))'.format(w=w, url=url)
+uri1 = r'(?:[Uu][Rr][Ll]\({w}{string}{w}\))'.format(w=w, string=string)
+uri2 = r'(?:[Uu][Rr][Ll]\({w}{url}{w}\))'.format(w=w, url=url)
 uri = r'(?:{uri1}|{uri2})'.format(uri1=uri1, uri2=uri2)
-baduri1 = r'(?:url\({w}{url}{w})'.format(w=w, url=url)
-baduri2 = r'(?:url\({w}{string}{w})'.format(w=w, string=string)
-baduri3 = r'(?:url\({w}{badstring})'.format(w=w, badstring=badstring)
+baduri1 = r'(?:[Uu][Rr][Ll]\({w}{url}{w})'.format(w=w, url=url)
+baduri2 = r'(?:[Uu][Rr][Ll]\({w}{string}{w})'.format(w=w, string=string)
+baduri3 = r'(?:[Uu][Rr][Ll]\({w}{badstring})'.format(w=w, badstring=badstring)
 baduri = r'(?:{baduri1}|{baduri2}|{baduri3})'.format(baduri1=baduri1, baduri2=baduri2, baduri3=baduri3)
 
 # identifiers (and similar)

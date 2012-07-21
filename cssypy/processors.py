@@ -48,7 +48,8 @@ class Importer(object):
         return None
         
     def parse(self, filename, default_encoding):
-        pw = parsers.ParserWrapper(default_encoding, self.Parser)
+        pw = parsers.ParserWrapper(default_encoding=default_encoding, 
+                                   Parser=self.Parser)
         stylesheet = pw.parse_file(filename,
                                    source_encoding=self.source_encoding, 
                                    default_encoding=default_encoding)

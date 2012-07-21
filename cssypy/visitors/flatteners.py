@@ -71,7 +71,7 @@ class RulesetFlattener(NodeTransformer):
         # All visits of RuleSets should be done by calling self.visit_RuleSet 
         # directly from their parent nodes.
         assert not isinstance(node, nodes.RuleSet)
-        super(RulesetFlattener, self).visit(node)
+        return super(RulesetFlattener, self).visit(node)
         
     def visit_Stylesheet(self, node):
         i = 0
@@ -79,25 +79,30 @@ class RulesetFlattener(NodeTransformer):
             stmt = node.statements[i]
             if isinstance(stmt, nodes.RuleSet):
                 # get chains from ruleset
-                # resolve chains selectors
-                # create new rulesets from resolved selectors and statements
-                # replace stmt with new rulesets
                 chains = self.visit_RuleSet(stmt)
                 newrulesets = []
                 for chain in chains:
+                    # resolve chain selectors
                     selectors = chain.resolve_selectors()
                     statements = chain.statements
+                    # create new ruleset from resolved selectors and statements
                     ruleset = nodes.RuleSet(selectors, statements)
                     newrulesets.append(ruleset)
+                # replace stmt with new rulesets
                 node.statements[i:i+1] = newrulesets
                 i += len(newrulesets)
             else:
-                self.visit(stmt)
-                i += 1
+                newstmt = self.visit(stmt)
+                if newstmt:
+                    node.statements[i:i+1] = [newstmt]
+                    i += 1
+                else:
+                    node.statements[i:i+1] = []
+        return node
                 
     def visit_RuleSet(self, node):
         child_rulesets = []
-        child_statements = []
+        child_statements = []  # non-ruleset statements
         for stmt in node.statements:
             if isinstance(stmt, nodes.RuleSet):
                 child_rulesets.append(stmt)

@@ -1,3 +1,5 @@
+import re
+
 from .. import nodes, errors, csstokens as tokens
 from ..utils import stringutil
 from . import base
@@ -14,9 +16,72 @@ def _create_ident_expr_node(value):
 
 class Parser(base.ParserBase):
     
+    # Main entry point
     def parse(self):
         return self.stylesheet()
+        
+    # Value nodes
+    def number(self):
+        if self.match(tokens.NUMBER):
+            return nodes.NumberNode.from_string(self.cur.value)
+        return None
+        
+    def percentage(self):
+        if self.match(tokens.PERCENTAGE):
+            return nodes.PercentageNode.from_string(self.cur.value)
+        return None
+        
+    def dimension(self):
+        if self.match(tokens.DIMENSION):
+            return nodes.DimensionNode.from_string(self.cur.value)
+        return None
+        
+    def string(self):
+        if self.match(tokens.STRING):
+            ##s = stringutil.unquote_string(self.cur.value)
+            return nodes.StringNode.from_string(self.cur.value)
+        return None
+        
+    def ident_expr(self):
+        if self.match(tokens.IDENT):
+            return nodes.IdentExpr.from_string(self.cur.value)
+        return None
+        
+    def uri(self):
+        if self.match(tokens.URI):
+            return nodes.UriNode.from_string(self.cur.value)
+        return None
+        
+    def varname(self):
+        if self.match(tokens.VARNAME):
+            return nodes.VarName.from_string(self.cur.value)
+        return None
+        
+    def function(self):
+        """
+        function ::= FUNCTION S* comma_expr ')' S* ;
+        """
+        if self.match(tokens.FUNCTION):
+            name = self.cur.value
+            self.skip_ws()
+            expr = self.comma_expr()
+            if not self.match(tokens.RPAREN):
+                raise self.syntax_error("Expected ')' after function.")
+            self.skip_ws()
+            return nodes.FunctionExpr.from_string(name, expr)
+        return None
     
+    def hexcolor(self):
+        """
+        hexcolor ::= HASH S* ;
+        """
+        if self.match(tokens.HASH):
+            hexcolor = nodes.HexColorNode.from_string(self.cur.value)
+            self.skip_ws()
+            return hexcolor
+        return None
+    
+    # Top-level node
     def stylesheet(self):
         """
         stylesheet ::= 
@@ -29,11 +94,19 @@ class Parser(base.ParserBase):
         if not self.match(tokens.START):
             # TODO: should this have an error?
             pass
+        
         # match @charset
         charset = self.charset()
         while self.match_any(tokens.WS, tokens.CDO, tokens.CDC):
             pass
-        # TODO: match @import
+        
+        # TODO: @imports
+        imports = []
+        import_ = self.import_()
+        while import_:
+            imports.append(import_)
+            import_ = self.import_()
+        
         statements = []
         while self.peek().type != tokens.EOF:
             stmt = self.toplevel_statement()
@@ -42,10 +115,12 @@ class Parser(base.ParserBase):
             statements.append(stmt)
             while self.match_any(tokens.CDO, tokens.CDC):
                 self.skip_ws()
+        
         if not self.match(tokens.EOF):
             # error, didn't parse entire file
             raise self.syntax_error("Expected end-of-file.")
-        return nodes.Stylesheet(charset, statements)
+        
+        return nodes.Stylesheet(charset, imports, statements)
         
     def charset(self):
         """
@@ -53,12 +128,33 @@ class Parser(base.ParserBase):
         """
         if self.match(tokens.CHARSET_SYM):
             if not self.match(tokens.STRING):
-                self.syntax_error("Bad @charset rule.")
-            charset = nodes.Charset(self.cur.value)
+                raise self.syntax_error("Bad @charset rule.")
+            charset = nodes.Charset.from_string(self.cur.value)
             if not self.match(tokens.SEMICOLON):
-                self.syntax_error("Bad @charset rule.")
+                raise self.syntax_error("Bad @charset rule.")
             return charset
         return None
+        
+    def import_(self):
+        """
+        import ::= IMPORT_SYM S* ( STRING | URI ) S* media_query_list? ';'  S* ;
+        """
+        if self.match(tokens.IMPORT_SYM):
+            self.skip_ws()
+            if self.match(tokens.STRING):
+                uri = nodes.StringNode.from_string(self.cur.value)
+            elif self.match(tokens.URI):
+                uri = nodes.UriNode.from_string(self.cur.value)
+            else:
+                raise self.syntax_error('Expected string or uri in @import statement.')
+            self.skip_ws()
+            # TODO: media_query_list
+            if not self.match(tokens.SEMICOLON):
+                raise self.syntax_error('Bad @import statement--semicolon required.')
+            self.skip_ws()
+            return nodes.Import(uri=uri)
+        return None
+            
         
     def toplevel_statement(self):
         """
@@ -275,7 +371,7 @@ class Parser(base.ParserBase):
         type_selector ::= element_name ;
         """
         if self.match(tokens.IDENT):
-            return nodes.TypeSelector(name=self.cur.value)
+            return nodes.TypeSelector.from_string(self.cur.value)
         return None
         
     def universal_selector(self):
@@ -300,9 +396,9 @@ class Parser(base.ParserBase):
         return None
         
     _ssshead_dict = {
-        tokens.IDENT: type_selector,
-        tokens.STAR: universal_selector,
-        tokens.AMPERSAND: combine_ancestor_selector,  # non-standard CSS
+        tokens.IDENT:       type_selector,
+        tokens.STAR:        universal_selector,
+        tokens.AMPERSAND:   combine_ancestor_selector,  # non-standard CSS
     }
     
     def simple_selector_sequence_head(self):
@@ -325,7 +421,7 @@ class Parser(base.ParserBase):
         idselector ::= HASH ;
         """
         if self.match(tokens.HASH):
-            return nodes.IdSelector(self.cur.value)
+            return nodes.IdSelector.from_string(self.cur.value)
         return None
     
     def class_selector(self):
@@ -334,7 +430,7 @@ class Parser(base.ParserBase):
         """
         if self.match(tokens.DOT):
             if self.match(tokens.IDENT):
-                return nodes.ClassSelector(name=self.cur.value)
+                return nodes.ClassSelector.from_string(self.cur.value)
             else:
                 raise self.syntax_error("Expected identifier.")
         return None
@@ -367,26 +463,27 @@ class Parser(base.ParserBase):
         if self.match(tokens.LSQBRACKET):
             self.skip_ws()
             if not self.match(tokens.IDENT):
-                self.syntax_error('Expected identifier')
+                raise self.syntax_error('Expected identifier')
             name = self.cur.value
             self.skip_ws()
             OpNode = self.match_dict(self._attrib_head_dict)
             if OpNode:
                 op = OpNode()
                 self.skip_ws()
-                if self.match(tokens.IDENT):
-                    val = nodes.IdentExpr(self.cur.value)
-                elif self.match(tokens.STRING):
-                    val = nodes.StringNode(self.cur.value)
+                if self.peek().type == tokens.IDENT:
+                    val = self.ident_expr()
+                elif self.peek().type == tokens.STRING:
+                    val = self.string()
                 else:
-                    self.syntax_error('Expected identifier or string.')
+                    m = 'Expected identifier or string.'
+                    raise self.syntax_error(m, use_next_token=False)
                 self.skip_ws()
             else:
                 op = None
                 val = None
             if not self.match(tokens.RSQBRACKET):
-                self.syntax_error("Expected right square bracket: ']'.")
-            return nodes.AttributeSelector(name, op=op, val=val)
+                raise self.syntax_error("Expected right square bracket: ']'.")
+            return nodes.AttributeSelector.from_string(name, op=op, val=val)
         return None
         
     def pseudo_selector(self):
@@ -405,7 +502,7 @@ class Parser(base.ParserBase):
                 child = self.function()
             else:
                 # TODO: error or not?
-                self.syntax_error('Expected identifier or function in pseudo-selector.')
+                raise self.syntax_error('Expected identifier or function in pseudo-selector.')
             
             if pseudo_elem:
                 return nodes.PseudoElementSelector(child)
@@ -445,10 +542,10 @@ class Parser(base.ParserBase):
                     break
             else:
                 # no rules matched
-                self.syntax_error('Unrecognized not() argument.')
+                raise self.syntax_error('Unrecognized not() argument.')
             self.skip_ws()
             if not self.match(tokens.RPAREN):
-                self.syntax_error('Expected right parenthesis.')
+                raise self.syntax_error('Expected right parenthesis.')
             return node
         return None
         
@@ -518,7 +615,7 @@ class Parser(base.ParserBase):
             expr = self.math_expr()
             if not expr:
                 raise self.syntax_error("Expected expression.")
-            return nodes.VarDef(name, expr)
+            return nodes.VarDef.from_string(name, expr)
         return None
     
     def declaration(self):
@@ -571,7 +668,7 @@ class Parser(base.ParserBase):
         property ::= IDENT S* ;
         """
         if self.match(tokens.IDENT):
-            prop = nodes.Property(name=self.cur.value)
+            prop = nodes.Property.from_string(self.cur.value)
             self.skip_ws()
             return prop
         return None
@@ -797,17 +894,20 @@ class Parser(base.ParserBase):
             self.skip_ws()
             return nodes.SubtractOp()
         return None
+        
+    
 
     _term_dict = {
-        tokens.NUMBER:          nodes.NumberNode,
-        tokens.PERCENTAGE:      nodes.PercentageNode,
-        tokens.DIMENSION:       nodes.DimensionNode,
-        tokens.STRING:          nodes.StringNode,
-        tokens.BADSTRING:       nodes.StringNode,
-        tokens.IDENT:           nodes.IdentExpr,
-        tokens.URI:             nodes.UriNode,
-        tokens.BADURI:          nodes.UriNode,
-        tokens.VARNAME:         nodes.VarName,
+        tokens.NUMBER:          number,
+        tokens.PERCENTAGE:      percentage,
+        tokens.DIMENSION:       dimension,
+        tokens.STRING:          string,
+        tokens.IDENT:           ident_expr,
+        tokens.URI:             uri,
+        tokens.VARNAME:         varname,
+        tokens.FUNCTION:        function,
+        tokens.HASH:            hexcolor, 
+        tokens.LPAREN:          paren_expr, 
     }
         
     def term(self):
@@ -832,24 +932,10 @@ class Parser(base.ParserBase):
         with self.token_stack_context() as token_stack:
             term = None
             unary_op = self.unary_operator()  # optional
-            func = self.match_dict(self._term_dict)
-            if func:
-                term = func(self.cur.value)
-            elif self.peek().type == tokens.FUNCTION:
-                term = self.function()
-                if not term:
-                    # syntax error, should have been handled in self.function()
-                    pass
-            elif self.peek().type == tokens.HASH:
-                term = self.hexcolor()
-                if not term:
-                    # syntax error, should have been handled in self.hexcolor()
-                    pass
-            elif self.peek().type == tokens.LPAREN:
-                term = self.paren_expr()
-                if not term:
-                    # syntax error, should have been handled in self.paren_expr()
-                    pass
+            rule = self._term_dict.get(self.peek().type, None)
+            if rule:
+                term = rule(self)
+            
             if term:
                 if unary_op:
                     term = nodes.UnaryOpExpr(op=unary_op, operand=term)
@@ -865,30 +951,6 @@ class Parser(base.ParserBase):
             return nodes.UMinus()
         elif self.match(tokens.PLUS):
             return nodes.UPlus()
-        return None
-        
-    def function(self):
-        """
-        function ::= FUNCTION S* comma_expr ')' S* ;
-        """
-        if self.match(tokens.FUNCTION):
-            name = self.cur.value
-            self.skip_ws()
-            expr = self.comma_expr()
-            if not self.match(tokens.RPAREN):
-                raise self.syntax_error("Expected ')' after function.")
-            self.skip_ws()
-            return nodes.FunctionExpr(name, expr)
-        return None
-            
-    def hexcolor(self):
-        """
-        hexcolor ::= HASH S* ;
-        """
-        if self.match(tokens.HASH):
-            hexcolor = nodes.HexColorNode(self.cur.value)
-            self.skip_ws()
-            return hexcolor
         return None
 
 

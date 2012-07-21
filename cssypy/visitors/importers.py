@@ -6,10 +6,15 @@ class Importer(base.NodeTransformer):
         self.callback = callback
         
     def visit_Import(self, node):
-        # TODO: 
-        #   Get url from node.
-        #   Call callback with url.
-        #   If callback doesn't return None, replace node with return value.
+        if isinstance(node.uri, nodes.StringNode):
+            # only import if uri is a string node
+            newnode = self.callback(node.uri.string)
+            if newnode:
+                assert isinstance(newnode, nodes.Stylesheet)
+                newnode = nodes.ImportedStylesheet(imports=newnode.imports, 
+                                                   statements=newnode.statements)
+                return newnode
+        # do nothing
         return node
         
     def __call__(self, node):

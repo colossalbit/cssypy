@@ -103,10 +103,13 @@ def _main(cmdline=None, reporter=None):
     dest_encoding = optdict.pop('dest_encoding', None)
     import_directories = []  # TODO
     
-    core.compile(ifile, ofile, source_encoding=source_encoding, 
-            dest_encoding=dest_encoding, default_encoding=default_encoding, 
-            import_directories=import_directories, options=optdict, 
-            reporter=reporter)
+    core.compile(ifile, ofile, 
+                 source_encoding=source_encoding, 
+                 dest_encoding=dest_encoding, 
+                 default_encoding=default_encoding, 
+                 import_directories=import_directories, 
+                 options=optdict, 
+                 reporter=reporter)
 
 def main():
     reporter = reporters.Reporter()

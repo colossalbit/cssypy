@@ -11,13 +11,13 @@ class Parser_TestCase(base.TestCaseBase):
         src = u''
         parser = Parser(src)
         stylesheet = parser.parse()
-        self.assertEqual('Stylesheet(charset=None, statements=[])', dump(stylesheet))
+        self.assertEqual('Stylesheet(charset=None, imports=[], statements=[])', dump(stylesheet))
         
     def test_charset(self):
         src = u'@charset "utf-8";'
         parser = Parser(src)
         stylesheet = parser.parse()
-        self.assertEqual("Stylesheet(charset=Charset(charset=u'utf-8'), statements=[])", dump(stylesheet))
+        self.assertEqual("Stylesheet(charset=Charset(charset=u'utf-8'), imports=[], statements=[])", dump(stylesheet))
         
         
 #==============================================================================#

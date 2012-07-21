@@ -5,7 +5,7 @@ from .. import nodes
 
 
 #==============================================================================#
-class Scope(object):
+class ScopeContext(object):
     def __init__(self, solver):
         self.solver = solver
         
@@ -15,16 +15,23 @@ class Scope(object):
         
     def __exit__(self, exc_type, exc_value, tb):
         self.solver.pop_scope()
-
-
-#==============================================================================#
-class Solver(NodeTransformer):
-    def __init__(self, options=None):
-        self.scopes = []
-        self.context = None
         
-    def scope(self):
-        return Scope(self)
+        
+class NamespaceContext(object):
+    def __init__(self, solver):
+        self.solver = solver
+    
+    def __enter__(self):
+        self.solver.push_namespace()
+        return self
+        
+    def __exit__(self, exc_type, exc_value, tb):
+        self.solver.pop_namespace()
+        
+
+class Namespace(object):
+    def __init__(self):
+        self.scopes = [{}]
         
     def push_scope(self):
         self.scopes.append({})
@@ -32,10 +39,14 @@ class Solver(NodeTransformer):
     def pop_scope(self):
         self.scopes.pop()
         
-    def assign_variable(self, name, value):
-        self.scopes[-1][name] = value
+    def merge_child_namespace(self, child):
+        assert isinstance(child, Namespace)
+        assert len(child.scopes) == 1
+        for name, value in child.scopes[0].iteritems():
+            if name not in self.scopes[-1]:
+                self.scopes[-1][name] = value
         
-    def retrieve_variable(self, name):
+    def __getitem__(self, name):
         for scope in self.scopes[::-1]:
             try:
                 return scope[name]
@@ -43,6 +54,44 @@ class Solver(NodeTransformer):
                 pass
         # TODO: should this raise an exception or return a sentinel value?
         raise RuntimeError('name not found')
+        
+    def __setitem__(self, name, value):
+        self.scopes[-1][name] = value
+
+
+#==============================================================================#
+class Solver(NodeTransformer):
+    def __init__(self, options=None):
+        self.namespaces = []
+        self.context = None
+        
+    def namespace(self):
+        return NamespaceContext(self)
+        
+    def push_namespace(self):
+        self.namespaces.append(Namespace())
+        
+    def pop_namespace(self):
+        if len(self.namespaces) > 1:
+            child = self.namespaces.pop()
+            self.namespaces[-1].merge_child_namespaces(child)
+        else:
+            self.namespaces.pop()
+        
+    def scope(self):
+        return ScopeContext(self)
+        
+    def push_scope(self):
+        self.namespaces[-1].push_scope()
+        
+    def pop_scope(self):
+        self.namespaces[-1].pop_scope()
+        
+    def assign_variable(self, name, value):
+        self.namespaces[-1][name] = value
+        
+    def retrieve_variable(self, name):
+        return self.namespaces[-1][name]
         
     def node_as_value(self, node):
         if isinstance(node, nodes.Node):
@@ -52,10 +101,10 @@ class Solver(NodeTransformer):
     def value_as_node(self, value):
         if not isinstance(value, nodes.Node):
             if value.is_negative():
-                node = nodes.CSSValueNode.from_value(-value)
+                node = nodes.CSSValueNode.node_from_value(-value)
                 return nodes.UnaryOpExpr(op=nodes.UMinus(), operand=node) 
             else:
-                return nodes.CSSValueNode.from_value(value)
+                return nodes.CSSValueNode.node_from_value(value)
         return value
         
     #==========================================================================#
@@ -63,8 +112,8 @@ class Solver(NodeTransformer):
         return self.visit(node)
         
     def visit_Stylesheet(self, node):
-        # new scope
-        with self.scope():
+        # new namespace
+        with self.namespace():
             node.statements = [self.visit(stmt) for stmt in node.statements]
         return node
         
@@ -83,9 +132,11 @@ class Solver(NodeTransformer):
         return node
 
     def visit_VarDef(self, node):
-        # TODO: solve Expr. Assign to variable.
+        # solve Expr; Assign to variable.
+        # The VarDef node is removed from the syntax tree.
         name = node.name
         value = self.visit(node.expr)
+        self.assign_variable(name, value)
         return None
         
     def visit_VarRef(self, node):
@@ -147,6 +198,7 @@ class Solver(NodeTransformer):
     def visit_Function(self, node):
         # TODO: certain functions are handled specially:
         #   rgb(), hsl(), rgba(), hsla() become Colors
+        node.expr = self.visit(node.expr)
         return node
 
 

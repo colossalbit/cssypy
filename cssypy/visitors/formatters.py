@@ -50,13 +50,29 @@ class CSSFormatterVisitor(NodeVisitor):
     
     # Structure...
     def visit_Stylesheet(self, node):
+        # ( charset NL )? ( import NL )* ( statement NL )*
+        if node.charset:
+            self.visit(node.charset)
+            self.newline()
+        for imp in node.imports:
+            self.visit(imp)
+        for stmt in node.statements:
+            self.visit(stmt)
+            self.newline()
+        self.flush()
+    
+    def visit_ImportedStylesheet(self, node):
+        # Do not increase indent. Imported statements should be at same level 
+        # as surrounding statements.
+        for imp in node.imports:
+            self.visit(imp)
         for stmt in node.statements:
             self.visit(stmt)
             self.newline()
         self.flush()
         
     def visit_RuleSet(self, node):
-        # selectors { PUSH_INDENT NL statements POP_INDENT NL }
+        # selectors '{' PUSH_INDENT NL statements POP_INDENT NL '}'
         for selector in node.selectors[:-1]:
             self.visit_Selector(selector)
             self.write(u', ')
@@ -80,7 +96,7 @@ class CSSFormatterVisitor(NodeVisitor):
             self.write(u' {}')
         
     def visit_Declaration(self, node):
-        # INDENT property: expression !important?; NL
+        # property ':' expression '!important'? ';'
         self.visit(node.property)
         self.write(u': ')
         self.visit(node.expr)
@@ -216,25 +232,25 @@ class CSSFormatterVisitor(NodeVisitor):
         
     # Values...
     def visit_DimensionNode(self, node):
-        self.write(node.to_css())
+        self.write(node.to_string())
         
     def visit_PercentageNode(self, node):
-        self.write(node.to_css())
+        self.write(node.to_string())
         
     def visit_NumberNode(self, node):
-        self.write(node.to_css())
+        self.write(node.to_string())
         
     def visit_StringNode(self, node):
-        self.write(node.to_css())
+        self.write(node.to_string())
         
     def visit_UriNode(self, node):
-        self.write(node.to_css())
+        self.write(node.to_string())
         
     def visit_ColorNode(self, node):
         self.write(node.value)
         
     def visit_HexColorNode(self, node):
-        self.write(node.to_css())
+        self.write(node.to_string())
         
     # Operators...
     def visit_UPlus(self, node):

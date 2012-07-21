@@ -52,10 +52,13 @@ class TailSimpleSelector(SimpleSelector):
     
 class IdSelector(TailSimpleSelector):
     _fields = ('name',)
-    def __init__(self, name, unescape=True):
-        if name.startswith('#'):
-            name = name[1:]
+    def __init__(self, name):
         self.name = name
+        
+    @classmethod
+    def from_string(cls, string):
+        assert string.startswith(u'#')
+        return cls(name=stringutil.unescape_name(string[1:]))
         
     def __eq__(self, other):
         if isinstance(other, IdSelector):
@@ -64,10 +67,12 @@ class IdSelector(TailSimpleSelector):
     
 class TypeSelector(HeadSimpleSelector):
     _fields = ('name',)
-    def __init__(self, name, unescape=True):
+    def __init__(self, name):
         self.name = name
-        if unescape:
-            self.name = stringutil.unescape_identifier(self.name)
+        
+    @classmethod
+    def from_string(cls, string):
+        return cls(name=stringutil.unescape_identifier(string))
         
     def __eq__(self, other):
         if isinstance(other, TypeSelector):
@@ -88,10 +93,12 @@ class CombineAncestorSelector(HeadSimpleSelector):
     
 class ClassSelector(TailSimpleSelector):
     _fields = ('name',)
-    def __init__(self, name, unescape=True):
+    def __init__(self, name):
         self.name = name
-        if unescape:
-            self.name = stringutil.unescape_identifier(self.name)
+        
+    @classmethod
+    def from_string(cls, string):
+        return cls(name=stringutil.unescape_identifier(string))
         
     def __eq__(self, other):
         if isinstance(other, ClassSelector):
@@ -103,7 +110,7 @@ class PseudoSelector(TailSimpleSelector):
         
 class PseudoClassSelector(PseudoSelector):
     _fields = ('node',)
-    def __init__(self, node, unescape=True):
+    def __init__(self, node):
         # can be a function or an ident
         self.node = node
         
@@ -114,7 +121,7 @@ class PseudoClassSelector(PseudoSelector):
         
 class PseudoElementSelector(PseudoSelector):
     _fields = ('node',)
-    def __init__(self, node, unescape=True):
+    def __init__(self, node):
         # can be a function or an ident
         self.node = node
         
@@ -125,7 +132,7 @@ class PseudoElementSelector(PseudoSelector):
         
 class NegationSelector(TailSimpleSelector):
     _fields = ('arg',)
-    def __init__(self, arg, unescape=True):
+    def __init__(self, arg):
         # can be a function or an ident
         self.arg = arg
         
@@ -136,13 +143,15 @@ class NegationSelector(TailSimpleSelector):
         
 class AttributeSelector(TailSimpleSelector):
     _fields = ('attr', 'op', 'val')
-    def __init__(self, attr, op=None, val=None, unescape=True):
+    def __init__(self, attr, op=None, val=None):
         assert (op is None and val is None) or (op is not None and val is not None)
         self.attr = attr
         self.op = op
         self.val = val # IdentExpr or StringNode
-        if unescape:
-            self.attr = stringutil.unescape_identifier(self.attr)
+        
+    @classmethod
+    def from_string(cls, string, op=None, val=None):
+        return cls(attr=stringutil.unescape_identifier(string), op=op, val=val)
         
     def __eq__(self, other):
         if isinstance(other, NegationSelector):

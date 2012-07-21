@@ -1,4 +1,6 @@
 import re
+import textwrap
+import os.path
 
 from cssypy import core
 
@@ -150,3 +152,62 @@ class CompileString_NoImporters_TestCase(base.TestCaseBase):
 
 
 #==============================================================================#
+class CompileFile_TestCase(base.TestCaseBase):
+    def test_imports_empty(self):
+        src = """\
+        @import "%(filename)s";
+        """
+        impsrc = """\
+        """
+        expect = """\
+        """
+        src =    textwrap.dedent(src)
+        impsrc = textwrap.dedent(impsrc)
+        expect = textwrap.dedent(expect)
+        impfilename = self.create_tempfile(data=impsrc, suffix='.css')
+        src = src % {'filename': os.path.basename(impfilename)}
+        ifilename = self.create_tempfile(data=src, suffix='.css')
+        ofilename = self.create_tempfile(suffix='.css')
+        
+        core.compile(ifilename, ofilename)
+        
+        with open(ofilename, 'r') as f:
+            data = f.read()
+        
+        self.assertEqual(expect, data)
+        
+    def test_imports(self):
+        src = """\
+        @import "%(filename)s";
+        selector1 { rule1: #abc; }
+        """
+        impsrc = """\
+        selector-imp { rule-imp: #123; }
+        """
+        expect = """\
+        selector-imp {
+            rule-imp: #123;
+        }
+        selector1 {
+            rule1: #abc;
+        }
+        """
+        src =    textwrap.dedent(src)
+        impsrc = textwrap.dedent(impsrc)
+        expect = textwrap.dedent(expect)
+        impfilename = self.create_tempfile(data=impsrc, suffix='.css')
+        src = src % {'filename': os.path.basename(impfilename)}
+        ifilename = self.create_tempfile(data=src, suffix='.css')
+        ofilename = self.create_tempfile(suffix='.css')
+        
+        core.compile(ifilename, ofilename)
+        
+        with open(ofilename, 'r') as f:
+            data = f.read()
+        
+        self.assertEqual(expect, data)
+
+
+#==============================================================================#
+        
+

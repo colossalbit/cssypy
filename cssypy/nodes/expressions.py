@@ -10,12 +10,13 @@ class IdentExpr(Ident, Expr):
     
 class VarName(Expr):
     _fields = ('name',)
-    def __init__(self, name, unescape=True):
-        if name.startswith('$'):
-            name = name[1:]
+    def __init__(self, name):
         self.name = name
-        if unescape:
-            self.name = stringutil.unescape_identifier(self.name)
+            
+    @classmethod
+    def from_string(cls, string):
+        assert string.startswith(u'$')
+        return cls(name=stringutil.unescape_identifier(string[1:]))
         
     def __eq__(self, other):
         if isinstance(other, VarName):
@@ -30,13 +31,15 @@ class VarName(Expr):
 
 class FunctionExpr(Expr):
     _fields = ('name', 'expr')
-    def __init__(self, name, expr, unescape=True):
+    def __init__(self, name, expr):
         # expr may be None
-        assert name.endswith('(')
-        self.name = name[:-1]
+        self.name = name
         self.expr = expr
-        if unescape:
-            self.name = stringutil.unescape_identifier(self.name)
+            
+    @classmethod
+    def from_string(cls, string, expr):
+        assert string.endswith(u'(')
+        return cls(name=stringutil.unescape_identifier(string[:-1]), expr=expr)
         
     def __eq__(self, other):
         if isinstance(other, Function):
@@ -45,7 +48,7 @@ class FunctionExpr(Expr):
     
 class UnaryOpExpr(Expr):
     _fields = ('op', 'operand')
-    def __init__(self, op, operand, unescape=True):
+    def __init__(self, op, operand):
         assert isinstance(operand, (Expr, CSSValueNode))
         self.op = op
         self.operand = operand
@@ -63,7 +66,7 @@ class UnaryOpExpr(Expr):
     
 class BinaryOpExpr(Expr):
     _fields = ('op', 'lhs', 'rhs')
-    def __init__(self, op, lhs, rhs, unescape=True):
+    def __init__(self, op, lhs, rhs):
         assert isinstance(lhs, (Expr, CSSValueNode))
         assert isinstance(rhs, (Expr, CSSValueNode))
         self.op = op
@@ -84,7 +87,7 @@ class BinaryOpExpr(Expr):
 
 class NaryOpExpr(Expr):
     _fields = ('op', 'operands')
-    def __init__(self, op, operand1=None, operand2=None, operands=None, unescape=True):
+    def __init__(self, op, operand1=None, operand2=None, operands=None):
         self.op = op
         if isinstance(operands, (tuple, list)):
             # for testing

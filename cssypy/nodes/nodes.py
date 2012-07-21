@@ -8,25 +8,40 @@ class Node(object):
 
 
 class Stylesheet(Node):
-    _fields = ('charset', 'statements',)
-    def __init__(self, charset, statements, unescape=True):
+    _fields = ('charset', 'imports', 'statements',)
+    def __init__(self, charset, imports, statements):
         assert all(isinstance(stmt, Statement) for stmt in statements)
         self.charset = charset
+        self.imports = imports
+        self.statements = statements
+        
+class ImportedStylesheet(Node):
+    _fields = ('imports', 'statements',)
+    def __init__(self, imports, statements):
+        assert all(isinstance(stmt, Statement) for stmt in statements)
+        self.imports = imports
         self.statements = statements
         
 class Charset(Node):
     _fields = ('charset',)
-    def __init__(self, charset, unescape=True):
+    def __init__(self, charset):
         self.charset = charset
-        if unescape:
-            self.charset = stringutil.unquote_string(self.charset)
+            
+    @classmethod
+    def from_string(cls, string):
+        return cls(charset=stringutil.unquote_string(string))
+        
+class Import(Node):
+    _fields = ('uri',)
+    def __init__(self, uri):
+        self.uri = uri  # UriNode or StringNode
         
 class Statement(Node):
     pass
     
 class RuleSet(Statement):
     _fields = ('selectors', 'statements',)
-    def __init__(self, selectors, statements, unescape=True):
+    def __init__(self, selectors, statements):
         assert all(isinstance(stmt, Statement) for stmt in statements)
         self.selectors = selectors
         self.statements = statements
@@ -40,7 +55,7 @@ class RuleSet(Statement):
 
 class Declaration(Statement):
     _fields = ('property', 'expr', 'important',)
-    def __init__(self, prop, expr, important=False, unescape=True):
+    def __init__(self, prop, expr, important=False):
         ##assert expr is None or isinstance(expr, ExprBase)
         assert isinstance(prop, Property)
         self.property = prop
@@ -57,11 +72,13 @@ class Declaration(Statement):
         
 class VarDef(Statement):
     _fields = ('name', 'expr')
-    def __init__(self, name, expr, unescape=True):
+    def __init__(self, name, expr):
         self.name = name
         self.expr = expr
-        if unescape:
-            self.name = stringutil.unescape_identifier(self.name)
+            
+    @classmethod
+    def from_string(cls, string, expr):
+        return cls(name=stringutil.unescape_identifier(string), expr=expr)
         
     def __eq__(self, other):
         if isinstance(other, VarDef):
@@ -71,10 +88,12 @@ class VarDef(Statement):
     
 class Property(Node):
     _fields = ('name',)
-    def __init__(self, name, unescape=True):
+    def __init__(self, name):
         self.name = name
-        if unescape:
-            self.name = stringutil.unescape_identifier(self.name)
+            
+    @classmethod
+    def from_string(cls, string):
+        return cls(name=stringutil.unescape_identifier(string))
         
     def __eq__(self, other):
         if isinstance(other, Property):
@@ -84,10 +103,12 @@ class Property(Node):
     
 class Ident(Node):
     _fields = ('name',)
-    def __init__(self, name, unescape=True):
+    def __init__(self, name):
         self.name = name
-        if unescape:
-            self.name = stringutil.unescape_identifier(self.name)
+            
+    @classmethod
+    def from_string(cls, string):
+        return cls(name=stringutil.unescape_identifier(string))
         
     def __eq__(self, other):
         if isinstance(other, Ident):
