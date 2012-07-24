@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 from .nodes import Node, Ident
 from .values import CSSValueNode
 from ..utils import stringutil

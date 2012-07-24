@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 from ..nodes import Node, iter_fields
 
 # These visitor classes are based on those in the standard library 'ast' module

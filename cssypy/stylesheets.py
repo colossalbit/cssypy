@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 
 class Stylesheet(object):
     def __init__(self, rootnode, filename='', encoding=None, forced_encoding=False, Parser=None):

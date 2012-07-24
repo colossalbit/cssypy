@@ -1,8 +1,13 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os.path
 import argparse
 import ConfigParser as configparser
 import collections
 import __builtin__
+
+import six
 
 from . import reporters
 from .. import defs
@@ -36,7 +41,7 @@ class OptionDef(object):
             self.default = default or __builtin__.list
         else:
             self.default = default
-        self.type = type or unicode
+        self.type = type or six.text_type
         self.choices = choices
         self.help = help    # used only by argparser
         self.list = list

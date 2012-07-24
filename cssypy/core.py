@@ -1,4 +1,9 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sys
+
+import six
 
 from . import processors, parsers
 
@@ -26,7 +31,7 @@ def compile(ifile, ofile, ifilename=None, ofilename=None, source_encoding=None,
         stream_in = True
         ifile = sys.stdin
         ifilename = sys.stdin.name
-    elif not isinstance(ifile, basestring):
+    elif not isinstance(ifile, six.string_types):
         stream_in = True
     
     # Special handling for the two cases where we write to a stream.
@@ -34,7 +39,7 @@ def compile(ifile, ofile, ifilename=None, ofilename=None, source_encoding=None,
         stream_out = True
         ofile = sys.stdout
         ofilename = sys.stdout.name
-    elif not isinstance(ofile, basestring):
+    elif not isinstance(ofile, six.string_types):
         stream_out = True
     
     # Build the processor and parse the input.

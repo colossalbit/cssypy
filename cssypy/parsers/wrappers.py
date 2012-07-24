@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
+import six
+
 from .. import readers, stylesheets
 
 #==============================================================================#
@@ -21,7 +26,7 @@ class ParserWrapper(object):
                                       Parser=self.Parser)
                            
     def parse(self, file, filename=None, source_encoding=None, default_encoding=None, do_decoding=True):
-        if isinstance(file, basestring):
+        if isinstance(file, six.string_types):
             return self.parse_file(file, source_encoding=source_encoding, 
                                    default_encoding=default_encoding)
         else:
@@ -46,7 +51,7 @@ class ParserWrapper(object):
                                      
     def parse_string(self, data, filename='<string>', source_encoding=None, default_encoding=None):
         default_encoding = default_encoding or self.default_encoding
-        if not isinstance(data, unicode):
+        if not isinstance(data, six.text_type):
             raise ValueError()
         reader = readers.StringReader(data, filename=filename, 
                                       source_encoding=source_encoding, 

@@ -1,4 +1,9 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
+
+import six
 
 from .. import datatypes
 from ..utils import stringutil
@@ -58,7 +63,7 @@ class DimensionNode(CSSValueNode):
     _precision = 3
     
     def __init__(self, number=None, unit=None):
-        assert isinstance(number, basestring) and isinstance(unit, basestring)
+        assert isinstance(number, six.string_types) and isinstance(unit, six.string_types)
         self.number = number
         self.unit = unit
     
@@ -98,7 +103,7 @@ class PercentageNode(CSSValueNode):
     _precision = 1
     
     def __init__(self, pct):
-        assert isinstance(pct, basestring)
+        assert isinstance(pct, six.string_types)
         self.pct = pct
         
     def to_value(self):
@@ -130,7 +135,7 @@ class NumberNode(CSSValueNode):
     _precision = 3
     
     def __init__(self, number):
-        assert isinstance(number, basestring)
+        assert isinstance(number, six.string_types)
         self.number = number
         
     def to_value(self):
@@ -165,14 +170,14 @@ class StringNode(CSSValueNode):
     _precision = 3
     
     def __init__(self, string):
-        assert isinstance(string, basestring)
+        assert isinstance(string, six.string_types)
         self.string = string
         
     def to_value(self):
         raise NotImplementedError() # TODO
         
     def from_value(cls, value):
-        return cls(string=unicode(value))
+        return cls(string=six.text_type(value))
             
     def to_string(self):
         return stringutil.quote_string(self.string)
@@ -283,10 +288,10 @@ class ColorNode(CSSValueNode):
 class HexColorNode(ColorNode):
     _fields = ('hex',)
     def __init__(self, hex):
-        assert isinstance(hex, basestring)
+        assert isinstance(hex, six.string_types)
         assert len(hex) == 3 or len(hex) == 6
         self.hex = hex
-        # if isinstance(hex, basestring):
+        # if isinstance(hex, six.string_types):
             # if hex.startswith('#'):
                 # hex = hex[1:]
             # assert len(hex) == 3 or len(hex) == 6

@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 from .. import nodes, errors, csstokens as tokens
@@ -119,7 +122,7 @@ class Parser(base.ParserBase):
         if not self.match(tokens.EOF):
             # error, didn't parse entire file
             for stmt in statements:
-                print nodes.debug_tostring(stmt)
+                print(nodes.debug_tostring(stmt))
             raise self.syntax_error("Expected end-of-file.")
         
         return nodes.Stylesheet(charset, imports, statements)
@@ -735,9 +738,9 @@ class Parser(base.ParserBase):
             elif not operator and not term:
                 break
             elif not operator:
-                print 'node_stack: {0}'.format(node_stack)
-                print 'op_stack:   {0}'.format(op_stack)
-                print 'term:       {0}'.format(term)
+                print('node_stack: {0}'.format(node_stack))
+                print('op_stack:   {0}'.format(op_stack))
+                print('term:       {0}'.format(term))
                 raise self.syntax_error("Expected operator.")
             
             while op_stack and operator._precedence <= op_stack[-1]._precedence:
@@ -805,9 +808,9 @@ class Parser(base.ParserBase):
             elif not operator and not term:
                 break
             elif not operator:
-                print 'node_stack: {0}'.format(node_stack)
-                print 'op_stack:   {0}'.format(op_stack)
-                print 'term:       {0}'.format(term)
+                print('node_stack: {0}'.format(node_stack))
+                print('op_stack:   {0}'.format(op_stack))
+                print('term:       {0}'.format(term))
                 raise self.syntax_error("Expected operator.")
             
             while op_stack and operator._precedence <= op_stack[-1]._precedence:

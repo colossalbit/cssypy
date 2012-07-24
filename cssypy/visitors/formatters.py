@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 from .base import NodeVisitor
 from .. import nodes
 from ..utils import stringutil
@@ -40,7 +43,7 @@ class CSSFormatterVisitor(NodeVisitor):
             self._last_optional_newline = len(self._cache)
         
     def flush(self):
-        ##print 'type(self._cache): {0}'.format(type(self._cache))
+        ##print('type(self._cache): {0}'.format(type(self._cache)))
         self.stream.write(self._cache)
         self._cache = u''
         self._last_optional_newline = 0

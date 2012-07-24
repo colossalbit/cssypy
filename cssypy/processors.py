@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import io
 import os.path
 import codecs
@@ -13,6 +16,59 @@ from .utils import reporters, stringutil
 stringutil.register_unicode_handlers()
 
 #==============================================================================#
+class FileRelativeFinder(object):
+    def __init__(self, basefilepath):
+        self.basefilepath = basefilepath  # relative to this file
+        
+    def find(self, filename):
+        dir = os.path.dirname(self.basefilepath)
+        filepath = os.path.join(dir, filename)
+        if os.path.exists(filepath):
+            assert os.path.isabs(filepath)
+            return filepath
+        return None
+        
+        
+class DirectoryListFinder(object):
+    def __init__(self, dirs):
+        self.dirs = dirs
+        
+    def find(self, filename):
+        filepaths = [os.path.join(dir, filename) for dir in self.dirs]
+        for filepath in filepaths:
+            if os.path.exists(filepath):
+                assert os.path.isabs(filepath)
+                return filepath
+        return None
+
+
+class ImportResolver(object):
+    def __init__(self, stylesheet, importing_filename, import_directories, options=None):
+        self.options = options or {}
+        self.finders = []
+        if self.options.get('curfile_relative_imports', 
+                            defs.IMPORT_RELATIVE_TO_CURRENT_FILE):
+            # look relative to directory of 'importing_filename'
+            self.finders.append(FileRelativeFinder(importing_filename))
+        if self.options.get('toplevel_relative_imports', 
+                            defs.IMPORT_RELATIVE_TO_TOPLEVEL_STYLESHEET):
+            # look relative to top-level stylesheet directory
+            toplevel_filename = os.path.abspath(stylesheet.filename)
+            finder = FileRelativeFinder(os.path.dirname(toplevel_filename))
+            self.finders.append(finder)
+        finders = self.options.get('import_finders', None)
+        if finders:
+            self.finders.extend(finders)
+        self.finders.append(DirectoryListFinder(import_directories))
+        
+    def resolve(self, filename):
+        for finder in self.finders:
+            filepath = finder.find(filename)
+            if filepath:
+                return filepath
+        return None
+    
+
 class Importer(object):
     def __init__(self, stylesheet, import_directories, options=None, 
                  reporter=None):
@@ -28,24 +84,10 @@ class Importer(object):
         self.import_directories = import_directories
         
     def resolve_filename(self, filename, importing_filename):
-        # 'importing_filename' must be an absolute path
-        dirs = []  # every path in 'dirs' must be an absolute path
-        if self.options.get('curfile_relative_imports', 
-                            defs.IMPORT_RELATIVE_TO_CURRENT_FILE):
-            # look relative to directory of 'importing_filename'
-            dirs.append(os.path.dirname(importing_filename))
-        if self.options.get('toplevel_relative_imports', 
-                            defs.IMPORT_RELATIVE_TO_TOPLEVEL_STYLESHEET):
-            # look relative to top-level stylesheet directory
-            toplevel_filename = os.path.abspath(self.stylesheet.filename)
-            dirs.append(os.path.dirname(toplevel_filename))
-        # look relative to self.import_directories
-        dirs.extend(self.import_directories)
-        filepaths = [os.path.join(dir, filename) for dir in dirs]
-        for filepath in filepaths:
-            if os.path.exists(filepath):
-                return filepath
-        return None
+        assert os.path.isabs(importing_filename)
+        resolver = ImportResolver(self.stylesheet, importing_filename, 
+                                  self.import_directories, options=self.options)
+        return resolver.resolve(filename)
         
     def parse(self, filename, default_encoding):
         pw = parsers.ParserWrapper(default_encoding=default_encoding, 

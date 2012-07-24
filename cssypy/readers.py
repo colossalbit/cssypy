@@ -1,6 +1,11 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 import codecs
 import io
+
+import six
 
 from . import errors, defs
 
@@ -169,7 +174,7 @@ class EncodedReader(Reader):
         for enc, regex, is_charset_rule_required in encoding_patterns:
             m = regex.match(content)
             if m:
-                if isinstance(enc, basestring):
+                if isinstance(enc, six.string_types):
                     encoding = enc
                 else:
                     encoding = enc(m)

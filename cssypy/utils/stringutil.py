@@ -1,5 +1,11 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 import codecs
+import sys
+
+from .py3compat import uchr, PYTHON3
 
 UNESCAPE_IDENT = ur'\\(?P<ucs6>[0-9A-Fa-f]{6})|\\(?P<ucs>[0-9A-Fa-f]{1,5})(?:\r\n|[ \t\r\n\f])?|\\(?P<char>[^\r\nA-Fa-f0-9])'
 ESCAPE_NMSTART = ur'(?P<digit>[0-9])|(?P<other>[^A-Za-z_\U000000A0-\U0010ffff\u00A0-\uffff])'     # lead character, cannot be a digit
@@ -16,18 +22,24 @@ re_escape_dquote_string = re.compile(ESCAPE_DQUOTE_STRING, re.UNICODE)
 re_escape_squote_string = re.compile(ESCAPE_SQUOTE_STRING, re.UNICODE)
 
 #==============================================================================#
-def _hex_to_unicode(s):
-    bytes = ''
-    if len(s) % 2 == 1:
-        bytes += chr(int(s[0], 16))
-        s = s[1:]
-    while s:
-        bytes += chr(int(s[:2], 16))
-        s = s[2:]
-    while len(bytes) < 4:
-        bytes = '\0' + bytes
-    decoder = codecs.getincrementaldecoder('utf_32_be')()
-    return decoder.decode(bytes, final=True)
+if PYTHON3: # pragma: no cover
+    _hex_to_unicode = chr
+
+else:
+    def _hex_to_unicode(s):
+        bytes = b''
+        if len(s) % 2 == 1:
+            bytes += chr(int(s[0], 16))  # py3: chr() returns unicode
+            s = s[1:]
+        while s:
+            bytes += chr(int(s[:2], 16))  # py3: chr() returns unicode
+            s = s[2:]
+        while len(bytes) < 4:
+            bytes = b'\0' + bytes
+        decoder = codecs.getincrementaldecoder('utf_32_be')()
+        return decoder.decode(bytes, final=True)
+    
+
 
 #==============================================================================#
 def _unescape_ident(m):
@@ -36,14 +48,14 @@ def _unescape_ident(m):
     if s:
         cp = int(s, 16)
         if cp <= 0xFFFF:
-            return unichr(cp)
+            return uchr(cp)  # py3: no unichr() function
         else:
             return _hex_to_unicode(s)
     s = m.group('ucs6')
     if s:
         cp = int(s, 16)
         if cp <= 0xFFFF:
-            return unichr(cp)
+            return uchr(cp)  # py3: no unichr() function
         else:
             return _hex_to_unicode(s)
     s = m.group('char')
@@ -108,14 +120,14 @@ def _unescape_string(m):
     if s:
         cp = int(s, 16)
         if cp <= 0xFFFF:
-            return unichr(cp)
+            return uchr(cp)  # py3: no unichr() function
         else:
             return _hex_to_unicode(s)
     s = m.group('ucs6')
     if s:
         cp = int(s, 16)
         if cp <= 0xFFFF:
-            return unichr(cp)
+            return uchr(cp)  # py3: no unichr() function
         else:
             return _hex_to_unicode(s)
     s = m.group('char')

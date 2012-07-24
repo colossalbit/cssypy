@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import unittest
 import tempfile
 import os
@@ -13,7 +16,7 @@ class TestCaseBase(unittest.TestCase):
             try:
                 os.remove(filename)
             except IOError as e:
-                print 'TestCaseBase: Error deleting temp file: {}'.format(str(e))
+                print('TestCaseBase: Error deleting temp file: {}'.format(str(e)))
         self.tempfiles = []
         super(TestCaseBase, self).tearDown()
         

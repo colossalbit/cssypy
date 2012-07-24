@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 
 DEFAULT_ENCODING = 'utf_8'
 

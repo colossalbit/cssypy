@@ -1,5 +1,5 @@
 from cssypy.parsers import Parser
-from cssypy import csstokens as tokens
+from cssypy import errors, csstokens as tokens
 from cssypy.nodes.util import dump
 from cssypy.nodes import *
 
@@ -18,6 +18,29 @@ class Parser_TestCase(base.TestCaseBase):
         parser = Parser(src)
         stylesheet = parser.parse()
         self.assertEqual("Stylesheet(charset=Charset(charset=u'utf-8'), imports=[], statements=[])", dump(stylesheet))
+
+
+#==============================================================================#
+class Charset_TestCase(base.TestCaseBase):
+    def test_no_string(self):
+        src = u'@charset  ;'
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.charset()
+    
+    def test_no_semicolon(self):
+        src = u'@charset "utf-8"  '
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.charset()
+        
+        src = u'@charset "utf-8"'
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.charset()
         
         
 #==============================================================================#
@@ -476,6 +499,13 @@ class Selector_TestCase(base.TestCaseBase):
             )
         self.assertEqual(dump(expected), dump(sel))
     
+    def test_bad_class_selector(self):
+        src = u'."this is a string"   '
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.selector()
+    
     def test_whitespace_combinator1(self):
         src = u'a b'
         parser = Parser(src)
@@ -639,6 +669,73 @@ class Selector_TestCase(base.TestCaseBase):
             )
         self.assertEqual(dump(expected), dump(sel))
         
+
+#==============================================================================#
+class Ruleset_TestCase(base.TestCaseBase):
+    def test_no_lbrace(self):
+        src = u'.myclass  '
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.ruleset()
+    
+    def test_no_rbrace(self):
+        src = u'.myclass { rule: #abc ; '
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.ruleset()
+        
+        src = u'.myclass { rule: #abc ; \n@import "mycssfile.css"'
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.ruleset()
+
+
+#==============================================================================#
+class VarDef_TestCase(base.TestCaseBase):
+    def test_missing_colon(self):
+        src = u'$var 123 ; '
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.vardef()
+    
+    def test_missing_expr(self):
+        src = u'$var: ;  '
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError):
+            parser.vardef()
+
+
+#==============================================================================#
+class Declaration_TestCase(base.TestCaseBase):
+    def test_ambiguous1_no_rbrace(self):
+        src = u'abc:def{ } ;'
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        # should return None as indicator the parse may still be valid, even 
+        # though parsing as declaration failed.
+        self.assertEqual(None, parser.declaration())
+    
+    def test_ambiguous2_no_rbrace(self):
+        src = u'abc:def:ghi:jkl {}'
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        # should return None as indicator the parse may still be valid, even 
+        # though parsing as declaration failed.
+        self.assertEqual(None, parser.declaration())
+        
+    def test_ambiguous3_no_expr(self):
+        src = u'abc:{this is silly}  '
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        # should return None as indicator the parse may still be valid, even 
+        # though parsing as declaration failed.
+        self.assertEqual(None, parser.declaration())
+
 
 #==============================================================================#
 

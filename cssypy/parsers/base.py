@@ -1,5 +1,9 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 from .. import errors, csstokens as tokens
 from ..scanners import Scanner
+from ..utils.py3compat import range
 
 from .util import TokenStackContext, Peeker
 
@@ -33,7 +37,7 @@ class ParserBase(object):
         self.scanner.putback(*toks)
         
     def advance(self, n):
-        for i in xrange(n):
+        for i in range(n):
             self._cur = self.scanner.next()
             if self._token_stacks:
                 self._token_stacks[-1].append(self._cur)

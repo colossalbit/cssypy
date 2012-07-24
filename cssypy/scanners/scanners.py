@@ -1,6 +1,10 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 import itertools
 
+from ..utils.py3compat import range
 from .. import csstokens as tokens
 
 class ScannerBase(object):
@@ -25,7 +29,7 @@ class ScannerBase(object):
         ntoload = max(n - len(self._next), 0)
         i = -1
         try:
-            for i in xrange(ntoload):
+            for i in range(ntoload):
                 self._next.append(self.get_next())
             return len(self._next)
         except StopIteration:
@@ -33,7 +37,7 @@ class ScannerBase(object):
                 raise
         loaded = i+1
         k = -1
-        for k in xrange(ntoload - loaded):
+        for k in range(ntoload - loaded):
             self._eof_count += 1
             self._next.append(tokens.Token(tokens.EOF, u'', self._lineno, self._column))
         return len(self._next)
@@ -100,7 +104,7 @@ class Scanner(ScannerBase):
 def benchmark_iter(src, tests=5):       # pragma: no cover
     import time
     times = []
-    for i in xrange(tests):
+    for i in range(tests):
         start = time.clock()
         for tok in re_tokens.finditer(src):
             pass
@@ -111,7 +115,7 @@ def benchmark_iter(src, tests=5):       # pragma: no cover
 def benchmark_iterlist(src, tests=5):   # pragma: no cover
     import time
     times = []
-    for i in xrange(tests):
+    for i in range(tests):
         start = time.clock()
         ilist = list(re_tokens.finditer(src))
         for tok in ilist:
@@ -123,7 +127,7 @@ def benchmark_iterlist(src, tests=5):   # pragma: no cover
 def benchmark_list(src, tests=5):       # pragma: no cover
     import time
     times = []
-    for i in xrange(tests):
+    for i in range(tests):
         start = time.clock()
         for tok in re_tokens.findall(src):
             pass
@@ -135,9 +139,9 @@ def benchmark(src, ntests=5):           # pragma: no cover
     times_list = benchmark_list(src, tests=ntests)
     times_iterlist = benchmark_iterlist(src, tests=ntests)
     times_iter = benchmark_iter(src, tests=ntests)
-    print 'iter     time: {0}'.format(min(times_iter))
-    print 'iterlist time: {0}'.format(min(times_iterlist))
-    print 'list     time: {0}'.format(min(times_list))
+    print('iter     time: {0}'.format(min(times_iter)))
+    print('iterlist time: {0}'.format(min(times_iterlist)))
+    print('list     time: {0}'.format(min(times_list)))
 
 #==============================================================================#
 

@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 from . import base
 from .. import nodes
 
@@ -7,6 +10,7 @@ class Importer(base.NodeTransformer):
         
     def visit_Import(self, node):
         if isinstance(node.uri, nodes.StringNode):
+            # TODO: require URI to end in .cssy, .scss, .css... make this an option 
             # only import if uri is a string node
             newnode = self.callback(node.uri.string)
             if newnode:
