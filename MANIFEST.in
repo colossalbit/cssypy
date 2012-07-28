@@ -1,0 +1,12 @@
+include LICENSE
+include MANIFEST.in
+include README.rst
+include requirements.pip
+include distribute_setup.py
+include runcoverage.py
+include runtests.py
+
+recursive-include cssypy *.py
+recursive-include docs *
+
+prune docs/build

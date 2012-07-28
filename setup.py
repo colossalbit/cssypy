@@ -30,7 +30,9 @@ setup(
     include_package_data = True,
     
     install_requires = install_requires,
-    zip_safe = False,
+    zip_safe = True,
+    
+    test_suite = 'cssypy.tests',
     
     author = 'David White',
     author_email = 'TODO',
