@@ -59,7 +59,7 @@ class RuleSet(Statement):
 class Declaration(Statement):
     _fields = ('property', 'expr', 'important',)
     def __init__(self, prop, expr, important=False):
-        ##assert expr is None or isinstance(expr, ExprBase)
+        assert expr is None or isinstance(expr, Node)
         assert isinstance(prop, Property)
         self.property = prop
         self.expr = expr
@@ -76,6 +76,7 @@ class Declaration(Statement):
 class VarDef(Statement):
     _fields = ('name', 'expr')
     def __init__(self, name, expr):
+        assert isinstance(expr, Node)
         self.name = name
         self.expr = expr
             

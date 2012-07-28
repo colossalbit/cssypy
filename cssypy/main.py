@@ -114,7 +114,7 @@ def _main(cmdline=None, reporter=None):
                  options=optdict, 
                  reporter=reporter)
 
-def main():
+def main():     # pragma: no cover
     reporter = reporters.Reporter()
     try:
         _main(reporter=reporter)

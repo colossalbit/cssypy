@@ -99,11 +99,13 @@ class Solver(NodeTransformer):
         return self.namespaces[-1][name]
         
     def node_as_value(self, node):
+        assert not isinstance(node, (list, tuple))
         if isinstance(node, nodes.Node):
             return node.to_value()
         return node
         
     def value_as_node(self, value):
+        assert not isinstance(value, (list, tuple))
         if not isinstance(value, nodes.Node):
             if value.is_negative():
                 node = nodes.CSSValueNode.node_from_value(-value)
@@ -144,7 +146,7 @@ class Solver(NodeTransformer):
         # solve Expr; Assign to variable.
         # The VarDef node is removed from the syntax tree.
         name = node.name
-        value = self.visit(node.expr)
+        value = self.value_as_node(self.visit(node.expr))
         self.assign_variable(name, value)
         return None
         

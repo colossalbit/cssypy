@@ -122,6 +122,21 @@ class CompileString_TestCase(base.TestCaseBase):
         src = u'$x: 8;\nselector { a: $x; }'
         r = core.compile_string(src)
         self.assertEqual(u'selector { a: 8; }', normalize(r))
+        
+    def test_varref2(self):
+        src = u'$x: 8;\nselector { a: $x $x; }'
+        r = core.compile_string(src)
+        self.assertEqual(u'selector { a: 8 8; }', normalize(r))
+        
+    def test_varref3(self):
+        src = u'$x: 8; $y: 3;\nselector { a: $x $y; }'
+        r = core.compile_string(src)
+        self.assertEqual(u'selector { a: 8 3; }', normalize(r))
+        
+    def test_varref4(self):
+        src = u'selector { $x: 4; $x: ($x + $x); a: ($x + $x); }'
+        r = core.compile_string(src)
+        self.assertEqual(u'selector { a: 16; }', normalize(r))
 
 #==============================================================================#
 class CompileString_NoSolvers_TestCase(base.TestCaseBase):

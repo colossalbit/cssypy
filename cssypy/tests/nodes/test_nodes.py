@@ -4,6 +4,7 @@ from cssypy import datatypes
 from .. import base
 
 
+#==============================================================================#
 class RuleSet_TestCase(base.TestCaseBase):
     def test_equal(self):
         a = RuleSet(
@@ -35,6 +36,7 @@ class RuleSet_TestCase(base.TestCaseBase):
         self.assertEqual(a, b)
         
         
+#==============================================================================#
 class MiscEquality_TestCase(base.TestCaseBase):
     def test_combinators(self):
         self.assertEqual(AdjacentSiblingCombinator(), AdjacentSiblingCombinator())
@@ -60,6 +62,7 @@ class MiscEquality_TestCase(base.TestCaseBase):
         self.assertEqual(MultOp(), MultOp())
         
         
+#==============================================================================#
 class HexColorNode_TestCase(base.TestCaseBase):
     def test_equal(self):
         self.assertEqual(HexColorNode(hex=u'aabbcc'), HexColorNode(hex=u'aabbcc'))
@@ -74,26 +77,46 @@ class HexColorNode_TestCase(base.TestCaseBase):
                          HexColorNode(hex=u'abc').to_value())
                          
 
+#==============================================================================#
 class NumberNode_TestCase(base.TestCaseBase):
     def test_equal(self):
         self.assertEqual(NumberNode('11'), NumberNode('11'))
         self.assertEqual(NumberNode('7'), NumberNode('7.0'))
                          
 
+#==============================================================================#
 class PercentageNode_TestCase(base.TestCaseBase):
     def test_equal(self):
         self.assertEqual(PercentageNode(pct='25'), PercentageNode(pct='25'))
         self.assertEqual(PercentageNode(pct='46.0'), PercentageNode(pct='46'))
                          
 
+#==============================================================================#
 class DimensionNode_TestCase(base.TestCaseBase):
     def test_equal(self):
         self.assertEqual(DimensionNode(number='15', unit='em'), 
                          DimensionNode(number='15', unit='em'))
         self.assertEqual(DimensionNode(number='32', unit='em'), 
                          DimensionNode(number='32.0', unit='em'))
+        self.assertFalse(
+            DimensionNode(number='32', unit='em') == 
+            DimensionNode(number='32.0', unit='px')
+        )
+        self.assertFalse(DimensionNode(number='32', unit='em') == 5)
+        self.assertFalse(5 == DimensionNode(number='32', unit='em'))
+        
+    def test_from_string(self):
+        self.assertEqual( DimensionNode.from_string(u'5em'), DimensionNode(number='5', unit='em'))
+        self.assertEqual( DimensionNode.from_string(u'5.em'), DimensionNode(number='5', unit='em'))
+        self.assertEqual( DimensionNode.from_string(u'5.0em'), DimensionNode(number='5', unit='em'))
+        
+        with self.assertRaises(ValueError):
+            DimensionNode.from_string(u'em')
+        with self.assertRaises(ValueError):
+            DimensionNode.from_string(u'5')
                          
                          
+#==============================================================================#
 class UriNode_TestCase(base.TestCaseBase):
     def test_from_string(self):
         # double quotes
@@ -114,6 +137,5 @@ class UriNode_TestCase(base.TestCaseBase):
         self.assertEqual('url("http://www.example.com/mycss.css")', node.to_string())
         
         
-
-
+#==============================================================================#
 

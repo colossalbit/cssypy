@@ -27,7 +27,7 @@ def compile(ifile, ofile, ifilename=None, ofilename=None, source_encoding=None,
     stream_in = stream_out = False
     
     # Special handling for the two cases where we read from a stream.
-    if ifile == '-':
+    if ifile == '-':        # pragma: no cover
         stream_in = True
         ifile = sys.stdin
         ifilename = sys.stdin.name
@@ -35,7 +35,7 @@ def compile(ifile, ofile, ifilename=None, ofilename=None, source_encoding=None,
         stream_in = True
     
     # Special handling for the two cases where we write to a stream.
-    if ofile == '-':
+    if ofile == '-':        # pragma: no cover
         stream_out = True
         ofile = sys.stdout
         ofilename = sys.stdout.name

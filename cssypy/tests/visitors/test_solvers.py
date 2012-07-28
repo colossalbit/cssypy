@@ -1,3 +1,5 @@
+import textwrap
+
 from cssypy.visitors import solvers
 from cssypy import parsers, errors
 from cssypy import csstokens as tokens
@@ -172,6 +174,69 @@ class Solver_TestCase(base.TestCaseBase):
                 important=False,
             )
         self.assertEqual(dump(expected), dump(decl))
+    
+    def test_nesting(self):
+        src = u'''\
+        s1 {
+            $x: 5;
+            s2 {
+                r1: $x;
+            }
+            r2: $x;
+        }
+        '''
+        src = textwrap.dedent(src)
+        parser = parsers.Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        stylesheet = parser.stylesheet()
+        solver = solvers.Solver()
+        stylesheet = solver.visit(stylesheet)
+        expected = \
+            Stylesheet(
+                charset=None,
+                imports=[],
+                statements=[
+                    RuleSet(
+                        selectors=[
+                            Selector(
+                                children=[
+                                    SimpleSelectorSequence(
+                                        head=TypeSelector(name=u's1'),
+                                        tail=[]
+                                    ),
+                                ]
+                            ),
+                        ],
+                        statements=[
+                            RuleSet(
+                                selectors=[
+                                    Selector(
+                                        children=[
+                                            SimpleSelectorSequence(
+                                                head=TypeSelector(name=u's2'),
+                                                tail=[]
+                                            ),
+                                        ]
+                                    ),
+                                ],
+                                statements=[
+                                    Declaration(
+                                        prop=Property(name=u'r1'),
+                                        expr=NumberNode(number=u'5'),
+                                        important=False
+                                    ),
+                                ]
+                            ),
+                            Declaration(
+                                prop=Property(name=u'r2'),
+                                expr=NumberNode(number=u'5'),
+                                important=False
+                            ),
+                        ]
+                    ),
+                ]
+            )
+        self.assertEqual(dump(expected), dump(stylesheet))
 
 
 

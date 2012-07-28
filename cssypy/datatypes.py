@@ -55,6 +55,17 @@ class Number(DataType):
         if isinstance(other, Number):
             return Number(self.n / other.n)
         return NotImplemented
+        
+    def __eq__(self, other):
+        if isinstance(other, Number):
+            return self.n == other.n
+        return NotImplemented
+        
+    def __hash__(self):
+        return hash(self.n)
+        
+    def __repr__(self):
+        return 'Number({})'.format(self.n)
     
     
 class Percentage(DataType):
@@ -62,8 +73,11 @@ class Percentage(DataType):
     #   ADD, SUB, MUL, DIV with Number
     #   ADD, SUB with Percentage
     #   UADD, USUB
-    def __init__(self, value):
-        self.p = value / 100.
+    def __init__(self, value, nodivide_100=False):
+        if nodivide_100:
+            self.p = value
+        else:
+            self.p = value / 100.
         
     def is_negative(self):
         return self.p < 0
@@ -72,10 +86,21 @@ class Percentage(DataType):
         return format(self.p*100., format_spec)
         
     def __neg__(self):
-        return Percentage(-self.p)
+        return Percentage(-self.p, nodivide_100=True)
         
     def __pos__(self):
         return self  # no-op
+        
+    def __eq__(self, other):
+        if isinstance(other, Percentage):
+            return self.p == other.p
+        return NotImplemented
+        
+    def __hash__(self):
+        return hash(self.p)
+        
+    def __repr__(self):
+        return 'Percentage({})'.format(self.p*100.)
 
 
 def _dimension_op(unitset, op, a, b):
@@ -140,12 +165,29 @@ class Dimension(DataType):
                 msg = msg.format(self.unit, other.unit)
                 raise errors.CSSTypeError(msg)
         elif isinstance(other, Number):
-            return Dimension(self.n+other.n, self.unit)
+            return Dimension(self.n-other.n, self.unit)
         return NotImplemented
         
     def __rsub__(self, other):
         if isinstance(other, Number):
             return Dimension(other.n - self.n, self.unit)
+        return NotImplemented
+        
+    def __repr__(self):
+        return 'Dimension({}{})'.format(self.n, self.unit)
+        
+    def __eq__(self, other):
+        if isinstance(other, Dimension):
+            if self.unit == other.unit:
+                return self.n == other.n
+            unitset = units.unitset_lookup.get(self.unit)
+            if unitset and (other.unit in unitset):
+                a = unitset[self.unit].to_common(self.n)
+                b = unitset[other.unit].to_common(other.n)
+                return a == b
+            else:
+                # unknown unit or incompatible units
+                return False
         return NotImplemented
     
     
@@ -185,13 +227,19 @@ class String(DataType):
     # strings in non-expression contexts are turned into the appropriate value:
     #   IdSelector, Number, ClassSelector, Ident, PseudoSelector
     def __init__(self, value):
-        pass
+        self.s = value
+        
+    def __repr__(self):
+        return 'String({})'.format(self.s)
         
         
 class Ident(DataType):
     # similar to a string, but without quotes
     def __init__(self, value):
-        pass
+        self.name = value
+        
+    def __repr__(self):
+        return 'Ident({})'.format(self.name)
 
 
 
