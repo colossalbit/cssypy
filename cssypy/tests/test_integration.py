@@ -118,32 +118,5 @@ class SolverIntegration_TestCase(base.TestCaseBase):
         expect = textwrap.dedent(expect)
         r = core.compile_string(src)
         self.assertEqual(expect, r)
-        
-    def test_nesting(self):
-        src = u'''\
-        $y: 8;
-        s1 {
-            $x: (5 + $y);
-            r1: $x $y;
-        }
-
-        s2 {
-            r2: (11 - $y);
-            r3: ($y + $y);
-        }
-        '''
-        expect = u'''\
-        s1 {
-            r1: 13 8;
-        }
-        s2 {
-            r2: 3;
-            r3: 16;
-        }
-        '''
-        src = textwrap.dedent(src)
-        expect = textwrap.dedent(expect)
-        r = core.compile_string(src)
-        self.assertEqual(expect, r)
 
 

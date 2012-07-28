@@ -4,17 +4,7 @@ from __future__ import print_function
 import re
 
 from .. import nodes, errors, csstokens as tokens
-from ..utils import stringutil
 from . import base
-
-def _create_string_node(value):
-    return nodes.StringNode(stringutil.unquote_string(value))
-
-def _create_ident_node(value):
-    return nodes.Ident(stringutil.unescape_identifier(value))
-
-def _create_ident_expr_node(value):
-    return nodes.IdentExpr(stringutil.unescape_identifier(value))
 
 
 class Parser(base.ParserBase):
@@ -41,7 +31,6 @@ class Parser(base.ParserBase):
         
     def string(self):
         if self.match(tokens.STRING):
-            ##s = stringutil.unquote_string(self.cur.value)
             return nodes.StringNode.from_string(self.cur.value)
         return None
         

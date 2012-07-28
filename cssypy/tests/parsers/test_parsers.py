@@ -668,6 +668,15 @@ class Selector_TestCase(base.TestCaseBase):
                 ]
             )
         self.assertEqual(dump(expected), dump(sel))
+    
+    def test_unnested_combine_ancestor_selector(self):
+        src = u'a &'
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError) as cm:
+            parser.selector()
+        self.assertEqual("The '&' selector is only allowed within nested ruleset scopes.", 
+                         cm.exception.msg)
         
 
 #==============================================================================#
@@ -735,6 +744,32 @@ class Declaration_TestCase(base.TestCaseBase):
         # should return None as indicator the parse may still be valid, even 
         # though parsing as declaration failed.
         self.assertEqual(None, parser.declaration())
+
+
+#==============================================================================#
+class ToplevelStatement_TestCase(base.TestCaseBase):
+    def test_vardef_at_end1(self):
+        # Variable definition at the end of a stylesheet is legal, though 
+        # useless.
+        src = u'$x: 5'
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        stmt = parser.toplevel_statement()
+        expected = \
+            VarDef(
+                name=u'x',
+                expr=NumberNode(number=u'5')
+            )
+        self.assertEqual(dump(expected), dump(stmt))
+        
+    def test_vardef_at_end2(self):
+        src = u'$x: 5 a {}'
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        with self.assertRaises(errors.CSSSyntaxError) as cm:
+            parser.toplevel_statement()
+        self.assertEqual("Variable definitions must end with a semicolon.", 
+                         cm.exception.msg)
 
 
 #==============================================================================#
