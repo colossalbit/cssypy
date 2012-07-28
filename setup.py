@@ -1,5 +1,8 @@
 import os.path
 
+from distribute_setup import use_setuptools
+use_setuptools()
+
 from setuptools import setup, find_packages
 
 import cssypy
@@ -19,8 +22,6 @@ def read_requirements(fname):
     return reqs
 
 install_requires = read_requirements('requirements.pip')
-import pprint
-pprint.pprint(install_requires)
 
 setup(
     name = 'CSSyPy',
