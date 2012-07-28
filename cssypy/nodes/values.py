@@ -68,7 +68,7 @@ class DimensionNode(CSSValueNode):
         self.unit = unit
     
     def to_value(self):
-        return datatypes.Dimension(float(self.number), self.unit)
+        return datatypes.Dimension(float(self.number), self.unit.lower())
         
     @classmethod
     def from_value(cls, value):
@@ -92,7 +92,8 @@ class DimensionNode(CSSValueNode):
         if isinstance(other, DimensionNode):
             if self.unit.lower() == other.unit.lower():
                 return float(self.number) == float(other.number)
-            return False  # TODO: convert to common unit if possible
+            else:
+                return self.to_value() == other.to_value()
         return NotImplemented
         
 _datatype_to_node[datatypes.Dimension] = DimensionNode

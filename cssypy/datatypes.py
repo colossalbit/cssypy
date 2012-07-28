@@ -3,8 +3,10 @@ from __future__ import print_function
 from __future__ import division
 
 import operator
+import colorsys
 
 from . import units, errors
+from .utils import colorutil
 
 
 class DataType(object):
@@ -74,19 +76,16 @@ class Percentage(DataType):
     #   ADD, SUB with Percentage
     #   UADD, USUB
     def __init__(self, value, nodivide_100=False):
-        if nodivide_100:
-            self.p = value
-        else:
-            self.p = value / 100.
+        self.p = value
         
     def is_negative(self):
         return self.p < 0
         
     def __format__(self, format_spec):
-        return format(self.p*100., format_spec)
+        return format(self.p, format_spec)
         
     def __neg__(self):
-        return Percentage(-self.p, nodivide_100=True)
+        return Percentage(-self.p)
         
     def __pos__(self):
         return self  # no-op
@@ -100,7 +99,31 @@ class Percentage(DataType):
         return hash(self.p)
         
     def __repr__(self):
-        return 'Percentage({})'.format(self.p*100.)
+        return 'Percentage({})'.format(self.p)
+        
+    def __add__(self, other):
+        if isinstance(other, Percentage):
+            return Percentage(self.p + other.p, nodivide_100=True)
+        elif isinstance(other, Number):
+            return Percentage(self.p + other.n, nodivide_100=True)
+        return NotImplemented
+        
+    def __radd__(self, other):
+        if isinstance(other, Number):
+            return Percentage(other.n + self.p, nodivide_100=True)
+        return NotImplemented
+        
+    def __sub__(self, other):
+        if isinstance(other, Percentage):
+            return Percentage(self.p - other.p, nodivide_100=True)
+        elif isinstance(other, Number):
+            return Percentage(self.p - other.n, nodivide_100=True)
+        return NotImplemented
+        
+    def __rsub__(self, other):
+        if isinstance(other, Number):
+            return Percentage(other.n - self.p, nodivide_100=True)
+        return NotImplemented
 
 
 def _dimension_op(unitset, op, a, b):
@@ -117,6 +140,7 @@ class Dimension(DataType):
     #   ADD, SUB with Dimension (depending on unit)
     #   UADD, USUB
     def __init__(self, number, unit):
+        # unit must be in lower case
         self.n = number
         self.unit = unit
         
@@ -173,6 +197,26 @@ class Dimension(DataType):
             return Dimension(other.n - self.n, self.unit)
         return NotImplemented
         
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            return Dimension(self.n * other.n, self.unit)
+        return NotImplemented
+        
+    def __rmul__(self, other):
+        if isinstance(other, Number):
+            return Dimension(other.n * self.n, self.unit)
+        return NotImplemented
+        
+    def __div__(self, other):
+        if isinstance(other, Number):
+            return Dimension(self.n / other.n, self.unit)
+        return NotImplemented
+        
+    def __rdiv__(self, other):
+        if isinstance(other, Number):
+            return Dimension(other.n / self.n, self.unit)
+        return NotImplemented
+        
     def __repr__(self):
         return 'Dimension({}{})'.format(self.n, self.unit)
         
@@ -196,30 +240,32 @@ class Color(DataType):
     #   ADD, SUB, MUL, DIV with Number
     #   ADD, SUB with Color
     def __init__(self, rgb=None, hsl=None, format=None):
-        assert format.lower() in (u'hex',u'hsl')
+        assert format and format.lower() in (u'hex',u'hsl')
         self.format = format.lower()
         if rgb:
             assert isinstance(rgb, tuple)
-            self.rgba = rgb + (255,)
+            # each component 0..255
+            self._rgba = rgb + (255,)
+        elif hsl:
+            assert isinstance(hsl, tuple)
+            # H:   0..360
+            # S,L: 0..1
+            rgb = colorutil.hsl_to_rgb(*hsl)
+            self._rgba = rgb + (255,)
         else:
             raise RuntimeError('TODO')
             
     @property
-    def r(self):
-        return self.rgba[0]
+    def hsla(self):
+        return colorutil.rgba_to_hsla(*self._rgba)
+        
     @property
-    def g(self):
-        return self.rgba[1]
-    @property
-    def b(self):
-        return self.rgba[2]
-    @property
-    def a(self):
-        return self.rgba[3]
+    def rgba(self):
+        return self._rgba
             
     def __eq__(self, other):
         if isinstance(other, Color):
-            return self.rgba == other.rgba
+            return self._rgba == other._rgba
         return NotImplemented
         
         
