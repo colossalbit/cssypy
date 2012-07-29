@@ -28,36 +28,18 @@ def get_optspec():
         Opt('enable_imports',  type=bool, dest='enable_imports', 
             metavar='(yes|no)', default=defs.ENABLE_IMPORTS,
             help='(default: yes)'))
-    # optspec.add_optdef(
-        # Opt('enable_imports',  type=bool, action='store_true', 
-            # dest='enable_imports', default=defs.ENABLE_IMPORTS))
-    # optspec.add_optdef(
-        # Opt('disable_imports', type=bool, action='store_false', 
-            # dest='enable_imports', cmdline_helper=True))
 
     # enable/disable flatten
     optspec.add_optdef(
         Opt('enable_flatten',  type=bool, dest='enable_flatten', 
             metavar='(yes|no)', default=defs.ENABLE_FLATTEN,
             help='(default: yes)'))
-    # optspec.add_optdef(
-        # Opt('enable_flatten',  type=bool, action='store_true',  
-            # dest='enable_flatten', default=defs.ENABLE_FLATTEN))
-    # optspec.add_optdef(
-        # Opt('disable_flatten', type=bool, action='store_false', 
-            # dest='enable_flatten', cmdline_helper=True))
 
     # enable/disable solve
     optspec.add_optdef(
         Opt('enable_solve',  type=bool, dest='enable_solve', 
             metavar='(yes|no)', default=defs.ENABLE_SOLVE,
             help='(default: yes)'))
-    # optspec.add_optdef(
-        # Opt('enable_solve',  type=bool, action='store_true',  
-            # dest='enable_solve', default=defs.ENABLE_SOLVE))
-    # optspec.add_optdef(
-        # Opt('disable_solve', type=bool, action='store_false', 
-            # dest='enable_solve', cmdline_helper=True))
     
     
     # enable/disable imports relative to the current stylesheet
@@ -66,14 +48,6 @@ def get_optspec():
             dest='curfile_relative_imports', 
             default=defs.IMPORT_RELATIVE_TO_CURRENT_FILE,
             help='(default: enable)'))
-            
-    # optspec.add_optdef(
-        # Opt('enable_curfile_relative_imports',  type=bool, action='store_true', 
-            # dest='curfile_relative_imports', 
-            # default=defs.IMPORT_RELATIVE_TO_CURRENT_FILE))
-    # optspec.add_optdef(
-        # Opt('disable_curfile_relative_imports', type=bool, action='store_false', 
-            # dest='curfile_relative_imports', cmdline_helper=True))
     
     # enable/disable imports relative to the top-level stylesheet
     optspec.add_optdef(
@@ -81,14 +55,6 @@ def get_optspec():
             dest='toplevel_relative_imports', 
             default=defs.IMPORT_RELATIVE_TO_TOPLEVEL_STYLESHEET,
             help='(default: enable)'))
-    # optspec.add_optdef(
-        # Opt('enable_toplevel_relative_imports',  type=bool, action='store_true',
-            # dest='toplevel_relative_imports', 
-            # default=defs.IMPORT_RELATIVE_TO_TOPLEVEL_STYLESHEET))
-    # optspec.add_optdef(
-        # Opt('disable_toplevel_relative_imports', type=bool, 
-            # action='store_false', dest='toplevel_relative_imports', 
-            # cmdline_helper=True))
     
     return optspec
     

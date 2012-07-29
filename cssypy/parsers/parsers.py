@@ -16,37 +16,37 @@ class Parser(base.ParserBase):
     # Value nodes
     def number(self):
         if self.match(tokens.NUMBER):
-            return nodes.NumberNode.from_string(self.cur.value)
+            return nodes.NumberNode.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def percentage(self):
         if self.match(tokens.PERCENTAGE):
-            return nodes.PercentageNode.from_string(self.cur.value)
+            return nodes.PercentageNode.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def dimension(self):
         if self.match(tokens.DIMENSION):
-            return nodes.DimensionNode.from_string(self.cur.value)
+            return nodes.DimensionNode.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def string(self):
         if self.match(tokens.STRING):
-            return nodes.StringNode.from_string(self.cur.value)
+            return nodes.StringNode.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def ident_expr(self):
         if self.match(tokens.IDENT):
-            return nodes.IdentExpr.from_string(self.cur.value)
+            return nodes.IdentExpr.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def uri(self):
         if self.match(tokens.URI):
-            return nodes.UriNode.from_string(self.cur.value)
+            return nodes.UriNode.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def varname(self):
         if self.match(tokens.VARNAME):
-            return nodes.VarName.from_string(self.cur.value)
+            return nodes.VarName.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def function(self):
@@ -55,12 +55,13 @@ class Parser(base.ParserBase):
         """
         if self.match(tokens.FUNCTION):
             name = self.cur.value
+            lineno = self.cur.lineno
             self.skip_ws()
             expr = self.comma_expr()
             if not self.match(tokens.RPAREN):
                 raise self.syntax_error("Expected ')' after function.")
             self.skip_ws()
-            return nodes.FunctionExpr.from_string(name, expr)
+            return nodes.FunctionExpr.from_string(name, expr, lineno=lineno, filename=self.filename)
         return None
     
     def hexcolor(self):
@@ -68,7 +69,7 @@ class Parser(base.ParserBase):
         hexcolor ::= HASH S* ;
         """
         if self.match(tokens.HASH):
-            hexcolor = nodes.HexColorNode.from_string(self.cur.value)
+            hexcolor = nodes.HexColorNode.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
             self.skip_ws()
             return hexcolor
         return None
@@ -121,9 +122,10 @@ class Parser(base.ParserBase):
         charset ::= CHARSET_SYM STRING ';' ;
         """
         if self.match(tokens.CHARSET_SYM):
+            lineno = self.cur.lineno
             if not self.match(tokens.STRING):
                 raise self.syntax_error("Bad @charset rule.")
-            charset = nodes.Charset.from_string(self.cur.value)
+            charset = nodes.Charset.from_string(self.cur.value, lineno=lineno, filename=self.filename)
             if not self.match(tokens.SEMICOLON):
                 raise self.syntax_error("Bad @charset rule.")
             return charset
@@ -134,11 +136,12 @@ class Parser(base.ParserBase):
         import ::= IMPORT_SYM S* ( STRING | URI ) S* media_query_list? ';'  S* ;
         """
         if self.match(tokens.IMPORT_SYM):
+            lineno = self.cur.lineno
             self.skip_ws()
             if self.match(tokens.STRING):
-                uri = nodes.StringNode.from_string(self.cur.value)
+                uri = nodes.StringNode.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
             elif self.match(tokens.URI):
-                uri = nodes.UriNode.from_string(self.cur.value)
+                uri = nodes.UriNode.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
             else:
                 raise self.syntax_error('Expected string or uri in @import statement.')
             self.skip_ws()
@@ -146,7 +149,7 @@ class Parser(base.ParserBase):
             if not self.match(tokens.SEMICOLON):
                 raise self.syntax_error('Bad @import statement--semicolon required.')
             self.skip_ws()
-            return nodes.Import(uri=uri)
+            return nodes.Import(uri=uri, lineno=lineno, filename=self.filename)
         return None
             
         
@@ -234,7 +237,7 @@ class Parser(base.ParserBase):
         # quit now if body is empty
         if self.match(tokens.RBRACE):
             self.skip_ws()
-            return nodes.RuleSet(selectors, [])
+            return nodes.RuleSet(selectors, [], lineno=selectors[0].lineno, filename=self.filename)
         
         self.skip_ws()
         statements = self.ruleset_body()
@@ -244,7 +247,7 @@ class Parser(base.ParserBase):
             
         self.skip_ws()
         
-        return nodes.RuleSet(selectors, statements)
+        return nodes.RuleSet(selectors, statements, lineno=selectors[0].lineno, filename=self.filename)
         
     def selector_group(self):
         """
@@ -308,10 +311,11 @@ class Parser(base.ParserBase):
         """
         # TODO: Note start/end of selector, so we can ensure there is no more 
         #       than one '&' in it.
+        lineno = self.cur.lineno
         ssseq = self.simple_selector_sequence()
         if not ssseq:
             return None
-        stor = nodes.Selector(ssseq)
+        stor = nodes.Selector(ssseq, lineno=ssseq.lineno, filename=self.filename)
         while True:     # pragma: no branch
             # Peek for common case of WS LBRACE which signals the start of the 
             # ruleset body.
@@ -359,14 +363,18 @@ class Parser(base.ParserBase):
         if not head and not tail:
             return None
         else:
-            return nodes.SimpleSelectorSequence(head, tail)
+            if head:
+                lineno = head.lineno
+            else:
+                lineno = tail[0].lineno
+            return nodes.SimpleSelectorSequence(head, tail, lineno=lineno, filename=self.filename)
         
     def type_selector(self):
         """
         type_selector ::= element_name ;
         """
         if self.match(tokens.IDENT):
-            return nodes.TypeSelector.from_string(self.cur.value)
+            return nodes.TypeSelector.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def universal_selector(self):
@@ -374,7 +382,7 @@ class Parser(base.ParserBase):
         universal_selector ::= '*' ;
         """
         if self.match(tokens.STAR):
-            return nodes.UniversalSelector()
+            return nodes.UniversalSelector(lineno=self.cur.lineno, filename=self.filename)
         return None
         
     def combine_ancestor_selector(self):
@@ -387,7 +395,7 @@ class Parser(base.ParserBase):
         if self.match(tokens.AMPERSAND):
             if not self.is_nested_scope():
                 raise self.syntax_error("The '&' selector is only allowed within nested ruleset scopes.")
-            return nodes.CombineAncestorSelector()
+            return nodes.CombineAncestorSelector(lineno=self.cur.lineno, filename=self.filename)
         return None
         
     _ssshead_dict = {
@@ -416,7 +424,7 @@ class Parser(base.ParserBase):
         idselector ::= HASH ;
         """
         if self.match(tokens.HASH):
-            return nodes.IdSelector.from_string(self.cur.value)
+            return nodes.IdSelector.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
         return None
     
     def class_selector(self):
@@ -424,8 +432,9 @@ class Parser(base.ParserBase):
         class ::= '.' IDENT ;
         """
         if self.match(tokens.DOT):
+            lineno=self.cur.lineno
             if self.match(tokens.IDENT):
-                return nodes.ClassSelector.from_string(self.cur.value)
+                return nodes.ClassSelector.from_string(self.cur.value, lineno=lineno, filename=self.filename)
             else:
                 raise self.syntax_error("Expected identifier.")
         return None
@@ -456,6 +465,7 @@ class Parser(base.ParserBase):
             ;
         """
         if self.match(tokens.LSQBRACKET):
+            lineno = self.cur.lineno
             self.skip_ws()
             if not self.match(tokens.IDENT):
                 raise self.syntax_error('Expected identifier')
@@ -478,7 +488,7 @@ class Parser(base.ParserBase):
                 val = None
             if not self.match(tokens.RSQBRACKET):
                 raise self.syntax_error("Expected right square bracket: ']'.")
-            return nodes.AttributeSelector.from_string(name, op=op, val=val)
+            return nodes.AttributeSelector.from_string(name, op=op, val=val, lineno=lineno, filename=self.filename)
         return None
         
     def pseudo_selector(self):
@@ -486,13 +496,14 @@ class Parser(base.ParserBase):
         pseudo_selector ::= ':' ':'? ( IDENT | function ) ;
         """
         if self.match(tokens.COLON):
+            lineno = self.cur.lineno
             pseudo_elem = False
             if self.match(tokens.COLON):
                 pseudo_elem = True
             if self.match(tokens.IDENT):
                 if self.cur.value.lower() in ('first-line','first-letter','before','after'):
                     pseudo_elem = True
-                child = nodes.Ident(self.cur.value)
+                child = nodes.Ident(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
             elif seek.peek().type == tokens.FUNCTION:
                 child = self.function()
             else:
@@ -500,18 +511,9 @@ class Parser(base.ParserBase):
                 raise self.syntax_error('Expected identifier or function in pseudo-selector.')
             
             if pseudo_elem:
-                return nodes.PseudoElementSelector(child)
+                return nodes.PseudoElementSelector(child, lineno=lineno, filename=self.filename)
             else:
-                return nodes.PseudoClassSelector(child)
-                
-                
-            # if self.match(tokens.IDENT):
-                # ident = nodes.Ident(self.cur.value)
-                # return nodes.PseudoSelector(ident)
-            
-            # elif self.peek().type == tokens.FUNCTION:
-                # func = self.function()
-                # return nodes.PseudoSelector(func)
+                return nodes.PseudoClassSelector(child, lineno=lineno, filename=self.filename)
         
         return None
         
@@ -529,11 +531,12 @@ class Parser(base.ParserBase):
         negation_selector ::= NOT S* negation_arg S* ')' ;
         """
         if self.match(tokens.NOT):
+            lineno = self.cur.lineno
             self.skip_ws()
             for rule in self._negarg_rules:
                 arg = rule(self)
                 if arg:
-                    node = nodes.NegationSelector(arg)
+                    node = nodes.NegationSelector(arg, lineno=lineno, filename=self.filename)
                     break
             else:
                 # no rules matched
@@ -602,6 +605,7 @@ class Parser(base.ParserBase):
         vardef ::= VARNAME S* ':' S* expr ;
         """
         if self.match(tokens.VARNAME):
+            lineno = self.cur.lineno
             name = self.cur.value
             self.skip_ws()
             if not self.match(tokens.COLON):
@@ -610,7 +614,7 @@ class Parser(base.ParserBase):
             expr = self.math_expr()
             if not expr:
                 raise self.syntax_error("Expected expression.")
-            return nodes.VarDef.from_string(name, expr)
+            return nodes.VarDef.from_string(name, expr, lineno=lineno, filename=self.filename)
         return None
     
     def declaration(self):
@@ -626,6 +630,7 @@ class Parser(base.ParserBase):
             prop = self.property()
             if not prop:
                 return None
+            lineno = prop.lineno
             
             if not self.match(tokens.COLON):
                 return None
@@ -656,14 +661,14 @@ class Parser(base.ParserBase):
                 else:
                     return None
             
-            return nodes.Declaration(prop=prop, expr=expr, important=important)
+            return nodes.Declaration(prop=prop, expr=expr, important=important, lineno=lineno, filename=self.filename)
         
     def property(self):
         """
         property ::= IDENT S* ;
         """
         if self.match(tokens.IDENT):
-            prop = nodes.Property.from_string(self.cur.value)
+            prop = nodes.Property.from_string(self.cur.value, lineno=self.cur.lineno, filename=self.filename)
             self.skip_ws()
             return prop
         return None
@@ -739,7 +744,7 @@ class Parser(base.ParserBase):
                     if isinstance(lhs, nodes.NaryOpExpr) and lhs.op == op:
                         lhs.operands.append(rhs)
                     else:
-                        lhs = nodes.NaryOpExpr(op, lhs, rhs)
+                        lhs = nodes.NaryOpExpr(op, lhs, rhs, lineno=lhs.lineno, filename=self.filename)
                 else:
                     # if lhs or rhsis BinaryOpExpr with FwdSlashOp, convert to DivisionOp
                     if isinstance(lhs, nodes.BinaryOpExpr) and isinstance(lhs.op, nodes.FwdSlashOp):
@@ -748,7 +753,7 @@ class Parser(base.ParserBase):
                         rhs.op = nodes.DivisionOp()
                     if isinstance(op, nodes.FwdSlashOp):
                         op = self._check_fwdslash_op(op, lhs, rhs)
-                    lhs = nodes.BinaryOpExpr(op, lhs, rhs)
+                    lhs = nodes.BinaryOpExpr(op, lhs, rhs, lineno=lhs.lineno, filename=self.filename)
                 node_stack.append(lhs)
                 
             node_stack.append(term)
@@ -761,7 +766,7 @@ class Parser(base.ParserBase):
                 if isinstance(lhs, nodes.NaryOpExpr) and lhs.op == op:
                     lhs.operands.append(rhs)
                 else:
-                    lhs = nodes.NaryOpExpr(op, lhs, rhs)
+                    lhs = nodes.NaryOpExpr(op, lhs, rhs, lineno=lhs.lineno, filename=self.filename)
             else:
                 # if lhs or rhsis BinaryOpExpr with FwdSlashOp, convert to DivisionOp
                 if isinstance(lhs, nodes.BinaryOpExpr) and isinstance(lhs.op, nodes.FwdSlashOp):
@@ -770,7 +775,7 @@ class Parser(base.ParserBase):
                     rhs.op = nodes.DivisionOp()
                 if isinstance(op, nodes.FwdSlashOp):
                     op = self._check_fwdslash_op(op, lhs, rhs)
-                lhs = nodes.BinaryOpExpr(op, lhs, rhs)
+                lhs = nodes.BinaryOpExpr(op, lhs, rhs, lineno=lhs.lineno, filename=self.filename)
             node_stack.append(lhs)
             
         self.skip_ws()
@@ -806,7 +811,7 @@ class Parser(base.ParserBase):
                 op = op_stack.pop()
                 rhs, lhs = node_stack.pop(), node_stack.pop()
                 assert not op._nary
-                lhs = nodes.BinaryOpExpr(op, lhs, rhs)
+                lhs = nodes.BinaryOpExpr(op, lhs, rhs, lineno=lhs.lineno, filename=self.filename)
                 node_stack.append(lhs)
                 
             node_stack.append(term)
@@ -816,7 +821,7 @@ class Parser(base.ParserBase):
             op = op_stack.pop()
             rhs, lhs = node_stack.pop(), node_stack.pop()
             assert not op._nary
-            lhs = nodes.BinaryOpExpr(op, lhs, rhs)
+            lhs = nodes.BinaryOpExpr(op, lhs, rhs, lineno=lhs.lineno, filename=self.filename)
             node_stack.append(lhs)
             
         self.skip_ws()
@@ -926,14 +931,17 @@ class Parser(base.ParserBase):
         """
         with self.token_stack_context() as token_stack:
             term = None
+            lineno = None
             unary_op = self.unary_operator()  # optional
+            if unary_op:
+                lineno = self.cur.lineno
             rule = self._term_dict.get(self.peek().type, None)
             if rule:
                 term = rule(self)
             
             if term:
                 if unary_op:
-                    term = nodes.UnaryOpExpr(op=unary_op, operand=term)
+                    term = nodes.UnaryOpExpr(op=unary_op, operand=term, lineno=lineno, filename=self.filename)
                 token_stack.accept()
                 ##self.skip_ws()
             return term

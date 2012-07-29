@@ -9,17 +9,20 @@ class Expr(Node):
     pass
 
 class IdentExpr(Ident, Expr):
+    # TODO: lineno
     pass
     
 class VarName(Expr):
     _fields = ('name',)
-    def __init__(self, name):
+    # TODO: lineno
+    def __init__(self, name, **kwargs):
+        super(VarName, self).__init__(**kwargs)
         self.name = name
             
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string, **kwargs):
         assert string.startswith(u'$')
-        return cls(name=stringutil.unescape_identifier(string[1:]))
+        return cls(name=stringutil.unescape_identifier(string[1:]), **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, VarName):
@@ -34,15 +37,17 @@ class VarName(Expr):
 
 class FunctionExpr(Expr):
     _fields = ('name', 'expr')
-    def __init__(self, name, expr):
+    # TODO: lineno
+    def __init__(self, name, expr, **kwargs):
+        super(FunctionExpr, self).__init__(**kwargs)
         # expr may be None
         self.name = name
         self.expr = expr
             
     @classmethod
-    def from_string(cls, string, expr):
+    def from_string(cls, string, expr, **kwargs):
         assert string.endswith(u'(')
-        return cls(name=stringutil.unescape_identifier(string[:-1]), expr=expr)
+        return cls(name=stringutil.unescape_identifier(string[:-1]), expr=expr, **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, Function):
@@ -50,8 +55,10 @@ class FunctionExpr(Expr):
         return NotImplemented
     
 class UnaryOpExpr(Expr):
+    # TODO: lineno
     _fields = ('op', 'operand')
-    def __init__(self, op, operand):
+    def __init__(self, op, operand, **kwargs):
+        super(UnaryOpExpr, self).__init__(**kwargs)
         assert isinstance(operand, (Expr, CSSValueNode))
         self.op = op
         self.operand = operand
@@ -68,8 +75,10 @@ class UnaryOpExpr(Expr):
         return '<UnaryOpExpr object: {0!r}>'.format(str(self))
     
 class BinaryOpExpr(Expr):
+    # TODO: lineno
     _fields = ('op', 'lhs', 'rhs')
-    def __init__(self, op, lhs, rhs):
+    def __init__(self, op, lhs, rhs, **kwargs):
+        super(BinaryOpExpr, self).__init__(**kwargs)
         assert isinstance(lhs, (Expr, CSSValueNode))
         assert isinstance(rhs, (Expr, CSSValueNode))
         self.op = op
@@ -90,7 +99,10 @@ class BinaryOpExpr(Expr):
 
 class NaryOpExpr(Expr):
     _fields = ('op', 'operands')
-    def __init__(self, op, operand1=None, operand2=None, operands=None):
+    # TODO: lineno
+    def __init__(self, op, operand1=None, operand2=None, operands=None, 
+                 **kwargs):
+        super(NaryOpExpr, self).__init__(**kwargs)
         self.op = op
         if isinstance(operands, (tuple, list)):
             # for testing

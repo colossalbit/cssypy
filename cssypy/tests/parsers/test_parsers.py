@@ -18,6 +18,19 @@ class Parser_TestCase(base.TestCaseBase):
         parser = Parser(src)
         stylesheet = parser.parse()
         self.assertEqual("Stylesheet(charset=Charset(charset=u'utf-8'), imports=[], statements=[])", dump(stylesheet))
+        
+    def test_charset_lineno(self):
+        src = u'@charset "utf-8";'
+        parser = Parser(src)
+        stylesheet = parser.parse()
+        self.assertEqual(1, stylesheet.charset.lineno)
+        
+    def test_ruleset_lineno(self):
+        src = u'\na {}'
+        parser = Parser(src)
+        stylesheet = parser.parse()
+        self.assertTrue(isinstance(stylesheet.statements[0], RuleSet))
+        self.assertEqual(2, stylesheet.statements[0].lineno)
 
 
 #==============================================================================#
@@ -700,6 +713,13 @@ class Ruleset_TestCase(base.TestCaseBase):
         self.assertTrue(parser.match(tokens.START))
         with self.assertRaises(errors.CSSSyntaxError):
             parser.ruleset()
+    
+    def test_lineno(self):
+        src = u'.myclass {} '
+        parser = Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        ruleset = parser.ruleset()
+        self.assertEqual(1, ruleset.lineno)
 
 
 #==============================================================================#

@@ -4,8 +4,16 @@ from __future__ import print_function
 from ..utils import stringutil
 
 class Node(object):
-    __slots__ = ()
+    __slots__ = ('lineno', 'filename',)
     _fields = ()
+    
+    def __init__(self, **kwargs):
+        self.lineno = kwargs.pop('lineno', None)
+        self.filename = kwargs.pop('filename', '')
+        if kwargs:
+            msg = "Unexpected keyword arguments: {}"
+            msg = msg.format(', '.join("'{}'".format(s) for s in kwargs))
+            raise ValueError(msg)
     
     __hash__ = None
 
@@ -20,23 +28,29 @@ class Stylesheet(Node):
         
 class ImportedStylesheet(Node):
     _fields = ('imports', 'statements',)
-    def __init__(self, imports, statements):
+    # TODO: this should get lineno from Import node
+    def __init__(self, imports, statements, **kwargs):
+        super(ImportedStylesheet, self).__init__(**kwargs)
         assert all(isinstance(stmt, Statement) for stmt in statements)
         self.imports = imports
         self.statements = statements
         
 class Charset(Node):
     _fields = ('charset',)
-    def __init__(self, charset):
+    def __init__(self, charset, **kwargs):
+        super(Charset, self).__init__(**kwargs)
         self.charset = charset
             
     @classmethod
-    def from_string(cls, string):
-        return cls(charset=stringutil.unquote_string(string))
+    def from_string(cls, string, **kwargs):
+        return cls(charset=stringutil.unquote_string(string), **kwargs)
         
 class Import(Node):
     _fields = ('uri',)
-    def __init__(self, uri):
+    # TODO: lineno
+    # TODO: should this be a statement?
+    def __init__(self, uri, **kwargs):
+        super(Import, self).__init__(**kwargs)
         self.uri = uri  # UriNode or StringNode
         
 class Statement(Node):
@@ -44,7 +58,9 @@ class Statement(Node):
     
 class RuleSet(Statement):
     _fields = ('selectors', 'statements',)
-    def __init__(self, selectors, statements):
+    # TODO: lineno
+    def __init__(self, selectors, statements, **kwargs):
+        super(RuleSet, self).__init__(**kwargs)
         assert all(isinstance(stmt, Statement) for stmt in statements)
         self.selectors = selectors
         self.statements = statements
@@ -58,7 +74,9 @@ class RuleSet(Statement):
 
 class Declaration(Statement):
     _fields = ('property', 'expr', 'important',)
-    def __init__(self, prop, expr, important=False):
+    # TODO: lineno
+    def __init__(self, prop, expr, important=False, **kwargs):
+        super(Declaration, self).__init__(**kwargs)
         assert expr is None or isinstance(expr, Node)
         assert isinstance(prop, Property)
         self.property = prop
@@ -74,16 +92,18 @@ class Declaration(Statement):
         
         
 class VarDef(Statement):
+    # TODO: lineno
     _fields = ('name', 'expr')
-    def __init__(self, name, expr):
+    def __init__(self, name, expr, **kwargs):
+        super(VarDef, self).__init__(**kwargs)
         assert isinstance(expr, Node)
         self.name = name
         self.expr = expr
             
     @classmethod
-    def from_string(cls, string, expr):
+    def from_string(cls, string, expr, **kwargs):
         assert string and string[0] == '$'
-        return cls(name=stringutil.unescape_identifier(string[1:]), expr=expr)
+        return cls(name=stringutil.unescape_identifier(string[1:]), expr=expr, **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, VarDef):
@@ -92,13 +112,15 @@ class VarDef(Statement):
         return NotImplemented
     
 class Property(Node):
+    # TODO: lineno
     _fields = ('name',)
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
+        super(Property, self).__init__(**kwargs)
         self.name = name
             
     @classmethod
-    def from_string(cls, string):
-        return cls(name=stringutil.unescape_identifier(string))
+    def from_string(cls, string, **kwargs):
+        return cls(name=stringutil.unescape_identifier(string), **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, Property):
@@ -107,13 +129,15 @@ class Property(Node):
 
     
 class Ident(Node):
+    # TODO: lineno
     _fields = ('name',)
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
+        super(Ident, self).__init__(**kwargs)
         self.name = name
             
     @classmethod
-    def from_string(cls, string):
-        return cls(name=stringutil.unescape_identifier(string))
+    def from_string(cls, string, **kwargs):
+        return cls(name=stringutil.unescape_identifier(string), **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, Ident):

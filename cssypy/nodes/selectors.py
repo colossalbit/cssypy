@@ -7,7 +7,9 @@ from ..utils import stringutil
 #==============================================================================#
 class Selector(Node):
     _fields = ('children',)
-    def __init__(self, children):
+    # TODO: lineno
+    def __init__(self, children, **kwargs):
+        super(Selector, self).__init__(**kwargs)
         if isinstance(children, SimpleSelectorSequence):
             self.children = [children]
         elif isinstance(children, (tuple, list)):
@@ -28,9 +30,11 @@ class Selector(Node):
         
 class SimpleSelectorSequence(Node):
     _fields = ('head', 'tail',)
+    # TODO: lineno
     # head can contain: TypeSelector, UniversalSelector, CombineAncestorSelector
     # tail can contain: IdSelector, ClassSelector, PseudoSelector
-    def __init__(self, head, tail):
+    def __init__(self, head, tail, **kwargs):
+        super(SimpleSelectorSequence, self).__init__(**kwargs)
         assert head is None or isinstance(head, HeadSimpleSelector), '{0}'.format(type(head))
         assert all(isinstance(x, (TailSimpleSelector, type(None))) for x in tail)
         self.head = head
@@ -45,6 +49,7 @@ class SimpleSelectorSequence(Node):
 #==============================================================================#
 # Simple Selectors
 class SimpleSelector(Node):
+    # TODO: lineno
     pass
     
 class HeadSimpleSelector(SimpleSelector):
@@ -55,13 +60,14 @@ class TailSimpleSelector(SimpleSelector):
     
 class IdSelector(TailSimpleSelector):
     _fields = ('name',)
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
+        super(IdSelector, self).__init__(**kwargs)
         self.name = name
         
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string, **kwargs):
         assert string.startswith(u'#')
-        return cls(name=stringutil.unescape_name(string[1:]))
+        return cls(name=stringutil.unescape_name(string[1:]), **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, IdSelector):
@@ -70,12 +76,13 @@ class IdSelector(TailSimpleSelector):
     
 class TypeSelector(HeadSimpleSelector):
     _fields = ('name',)
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
+        super(TypeSelector, self).__init__(**kwargs)
         self.name = name
         
     @classmethod
-    def from_string(cls, string):
-        return cls(name=stringutil.unescape_identifier(string))
+    def from_string(cls, string, **kwargs):
+        return cls(name=stringutil.unescape_identifier(string), **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, TypeSelector):
@@ -96,12 +103,13 @@ class CombineAncestorSelector(HeadSimpleSelector):
     
 class ClassSelector(TailSimpleSelector):
     _fields = ('name',)
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
+        super(ClassSelector, self).__init__(**kwargs)
         self.name = name
         
     @classmethod
-    def from_string(cls, string):
-        return cls(name=stringutil.unescape_identifier(string))
+    def from_string(cls, string, **kwargs):
+        return cls(name=stringutil.unescape_identifier(string), **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, ClassSelector):
@@ -113,7 +121,8 @@ class PseudoSelector(TailSimpleSelector):
         
 class PseudoClassSelector(PseudoSelector):
     _fields = ('node',)
-    def __init__(self, node):
+    def __init__(self, node, **kwargs):
+        super(PseudoClassSelector, self).__init__(**kwargs)
         # can be a function or an ident
         self.node = node
         
@@ -124,7 +133,8 @@ class PseudoClassSelector(PseudoSelector):
         
 class PseudoElementSelector(PseudoSelector):
     _fields = ('node',)
-    def __init__(self, node):
+    def __init__(self, node, **kwargs):
+        super(PseudoElementSelector, self).__init__(**kwargs)
         # can be a function or an ident
         self.node = node
         
@@ -135,7 +145,8 @@ class PseudoElementSelector(PseudoSelector):
         
 class NegationSelector(TailSimpleSelector):
     _fields = ('arg',)
-    def __init__(self, arg):
+    def __init__(self, arg, **kwargs):
+        super(NegationSelector, self).__init__(**kwargs)
         # can be a function or an ident
         self.arg = arg
         
@@ -146,15 +157,16 @@ class NegationSelector(TailSimpleSelector):
         
 class AttributeSelector(TailSimpleSelector):
     _fields = ('attr', 'op', 'val')
-    def __init__(self, attr, op=None, val=None):
+    def __init__(self, attr, op=None, val=None, **kwargs):
+        super(AttributeSelector, self).__init__(**kwargs)
         assert (op is None and val is None) or (op is not None and val is not None)
         self.attr = attr
         self.op = op
         self.val = val # IdentExpr or StringNode
         
     @classmethod
-    def from_string(cls, string, op=None, val=None):
-        return cls(attr=stringutil.unescape_identifier(string), op=op, val=val)
+    def from_string(cls, string, op=None, val=None, **kwargs):
+        return cls(attr=stringutil.unescape_identifier(string), op=op, val=val, **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, NegationSelector):

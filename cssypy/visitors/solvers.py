@@ -139,6 +139,7 @@ class Solver(NodeTransformer):
                 
     def visit_Declaration(self, node):
         node.property = self.visit(node.property)
+        #TODO: set lineno on value node if it doesn't have one
         node.expr = self.value_as_node(self.visit(node.expr))
         return node
 
@@ -146,6 +147,7 @@ class Solver(NodeTransformer):
         # solve Expr; Assign to variable.
         # The VarDef node is removed from the syntax tree.
         name = node.name
+        #TODO: set lineno on value node if it doesn't have one
         value = self.value_as_node(self.visit(node.expr))
         self.assign_variable(name, value)
         return None

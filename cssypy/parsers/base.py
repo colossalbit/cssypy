@@ -18,6 +18,10 @@ class ParserBase(object):
         self._filename = filename or '<FILENAME>'
         
     @property
+    def filename(self):
+        return self._filename
+        
+    @property
     def cur(self):
         """Is only safe to access immediately after a call 'match' or 
            'match_any' that returned True.  Otherwise, an intervening call to 

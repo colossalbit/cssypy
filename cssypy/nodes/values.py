@@ -51,7 +51,7 @@ class CSSValueNode(Node):
         raise NotImplementedError() # pragma: no cover
         
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string, **kwargs):
         raise NotImplementedError() # pragma: no cover
 
 
@@ -61,8 +61,10 @@ re_dimension = re.compile(ur'^(?P<num>[0-9\.]+)(?P<unit>[^0-9\.].*)$')
 class DimensionNode(CSSValueNode):
     _fields = ('number', 'unit')
     _precision = 3
+    # TODO: lineno
     
-    def __init__(self, number=None, unit=None):
+    def __init__(self, number=None, unit=None, **kwargs):
+        super(DimensionNode, self).__init__(**kwargs)
         assert isinstance(number, six.string_types) and isinstance(unit, six.string_types)
         self.number = number
         self.unit = unit
@@ -80,13 +82,13 @@ class DimensionNode(CSSValueNode):
                                 stringutil.escape_identifier(self.unit))
         
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string, **kwargs):
         m = re_dimension.match(string)
         if not m:
             raise ValueError()  # TODO
         number = m.group('num')
         unit = stringutil.unescape_identifier(m.group('unit'))
-        return cls(number=number, unit=unit)
+        return cls(number=number, unit=unit, **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, DimensionNode):
@@ -102,8 +104,10 @@ _datatype_to_node[datatypes.Dimension] = DimensionNode
 class PercentageNode(CSSValueNode):
     _fields = ('pct',)
     _precision = 1
+    # TODO: lineno
     
-    def __init__(self, pct):
+    def __init__(self, pct, **kwargs):
+        super(PercentageNode, self).__init__(**kwargs)
         assert isinstance(pct, six.string_types)
         self.pct = pct
         
@@ -119,9 +123,9 @@ class PercentageNode(CSSValueNode):
         return u'{0}%'.format(self.pct)
         
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string, **kwargs):
         assert string and string[-1] == u'%'
-        return cls(pct=string[:-1])
+        return cls(pct=string[:-1], **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, PercentageNode):
@@ -134,8 +138,10 @@ _datatype_to_node[datatypes.Percentage] = PercentageNode
 class NumberNode(CSSValueNode):
     _fields = ('number',)
     _precision = 3
+    # TODO: lineno
     
-    def __init__(self, number):
+    def __init__(self, number, **kwargs):
+        super(NumberNode, self).__init__(**kwargs)
         assert isinstance(number, six.string_types)
         self.number = number
         
@@ -154,8 +160,8 @@ class NumberNode(CSSValueNode):
         return u'{0}'.format(self.number)
         
     @classmethod
-    def from_string(cls, string):
-        return cls(number=string)
+    def from_string(cls, string, **kwargs):
+        return cls(number=string, **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, NumberNode):
@@ -169,8 +175,10 @@ _datatype_to_node[datatypes.Number] = NumberNode
 class StringNode(CSSValueNode):
     _fields = ('string',)
     _precision = 3
+    # TODO: lineno
     
-    def __init__(self, string):
+    def __init__(self, string, **kwargs):
+        super(StringNode, self).__init__(**kwargs)
         assert isinstance(string, six.string_types)
         self.string = string
         
@@ -184,12 +192,13 @@ class StringNode(CSSValueNode):
         return stringutil.quote_string(self.string)
         
     @classmethod
-    def from_string(cls, string):
-        return cls(string=stringutil.unquote_string(string))
+    def from_string(cls, string, **kwargs):
+        return cls(string=stringutil.unquote_string(string), **kwargs)
         
 
 class UriNode(CSSValueNode):
     _fields = ('uri',)
+    # TODO: lineno
     
     w = r'(?:[ \t\r\n\f]*)'
     string1 = r'(?:"(?:[^"\\\r\n]|\\[^\r\n])*")'
@@ -199,7 +208,8 @@ class UriNode(CSSValueNode):
     uri = r'[Uu][Rr][Ll]\({w}(?:{string}|{bareuri}){w}\)'.format(w=w, string=string, bareuri=bareuri)
     re_uri = re.compile(uri, re.UNICODE)
     
-    def __init__(self, uri):
+    def __init__(self, uri, **kwargs):
+        super(UriNode, self).__init__(**kwargs)
         self.uri = uri
         
     def to_value(self):
@@ -212,16 +222,16 @@ class UriNode(CSSValueNode):
         return u'url({})'.format(stringutil.quote_string(self.uri))
         
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string, **kwargs):
         m = cls.re_uri.match(string)
         if not m:
             raise ValueError()
         s = m.group('string')
         if s:
-            return cls(uri=stringutil.unquote_string(s))
+            return cls(uri=stringutil.unquote_string(s), **kwargs)
         s = m.group('bareuri')
         if s:
-            return cls(uri=stringutil.unescape_name(s))
+            return cls(uri=stringutil.unescape_name(s), **kwargs)
         raise ValueError()
     
 
@@ -278,7 +288,7 @@ class ColorNode(CSSValueNode):
             raise RuntimeError()  # TODO
         
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string, **kwargs):
         raise NotImplementedError() # TODO
             
     def __eq__(self, other):
@@ -288,25 +298,12 @@ class ColorNode(CSSValueNode):
     
 class HexColorNode(ColorNode):
     _fields = ('hex',)
-    def __init__(self, hex):
+    # TODO: lineno
+    def __init__(self, hex, **kwargs):
+        super(HexColorNode, self).__init__(**kwargs)
         assert isinstance(hex, six.string_types)
         assert len(hex) == 3 or len(hex) == 6
         self.hex = hex
-        # if isinstance(hex, six.string_types):
-            # if hex.startswith('#'):
-                # hex = hex[1:]
-            # assert len(hex) == 3 or len(hex) == 6
-            # self.hex = hex
-        # elif isinstance(hex, datatypes.Color):
-            # r = u'{0:02X}'.format(hex.r)
-            # g = u'{0:02X}'.format(hex.g)
-            # b = u'{0:02X}'.format(hex.b)
-            # if r[0]==r[1] and g[0]==g[1] and b[0]==b[1]:
-                # self.hex = u'{0}{1}{2}'.format(r[0], g[0], b[0])
-            # else:
-                # self.hex = u'{0}{1}{2}'.format(r, g, b)
-        # else:
-            # raise ValueError()  # TODO
             
     def normalized_hex(self):
         if len(self.hex) == 6:
@@ -341,10 +338,10 @@ class HexColorNode(ColorNode):
         return self.to_string_hex()
         
     @classmethod
-    def from_string(cls, string):
+    def from_string(cls, string, **kwargs):
         assert string.startswith(u'#')
         assert len(string) == 4 or len(string) == 7 # '#' + hex chars
-        return cls(hex=string[1:])
+        return cls(hex=string[1:], **kwargs)
         
     def __eq__(self, other):
         if isinstance(other, HexColorNode):

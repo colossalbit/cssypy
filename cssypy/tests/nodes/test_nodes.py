@@ -1,9 +1,16 @@
 from cssypy.nodes import *
-from cssypy import datatypes
+from cssypy import datatypes, errors
 
 from .. import base
 
 
+#==============================================================================#
+class Node_TestCase(base.TestCaseBase):
+    def test_unknown_kwargs(self):
+        with self.assertRaises(ValueError) as cm:
+            Node(unknown_kwarg='abc')
+        self.assertTrue(str(cm.exception).startswith("Unexpected keyword arguments:"))
+        
 #==============================================================================#
 class RuleSet_TestCase(base.TestCaseBase):
     def test_equal(self):
