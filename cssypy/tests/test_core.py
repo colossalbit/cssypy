@@ -2,7 +2,7 @@ import re
 import textwrap
 import os.path
 
-from cssypy import core
+from cssypy import core, errors
 
 from . import base
 
@@ -137,6 +137,16 @@ class CompileString_TestCase(base.TestCaseBase):
         src = u'selector { $x: 4; $x: ($x + $x); a: ($x + $x); }'
         r = core.compile_string(src)
         self.assertEqual(u'selector { a: 16; }', normalize(r))
+        
+    def test_syntax_error(self):
+        src = u'selector. class'
+        with self.assertRaises(errors.CSSSyntaxError):
+            core.compile_string(src)
+        
+    def test_syntax_error2(self):
+        src = u'selector. class'
+        with self.assertRaises(SystemExit):
+            core.compile_string(src, propagate_exceptions=False)
 
 #==============================================================================#
 class CompileString_NoSolvers_TestCase(base.TestCaseBase):

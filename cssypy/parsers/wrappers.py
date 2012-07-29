@@ -17,7 +17,9 @@ class ParserWrapper(object):
         parser = self.Parser(reader.read())
         rootnode = parser.parse()
         if reader.charset_rule_required():
-            # check that rootnode contains an appropriate @charset rule
+            # TODO: check that rootnode contains an appropriate @charset rule
+            # rootnode.charset != None
+            # normalize(rootnode.charset.charset) == normalize(reader.encoding())
             pass
         return stylesheets.Stylesheet(rootnode, 
                                       filename=reader.filename(), 

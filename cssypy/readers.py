@@ -28,12 +28,12 @@ def name32_BE(m):
     assert len(raw) % 4 == 0
     return ''.join(c for c in raw[3::4])
     
-def name32_2143(m):
+def name32_2143(m): # pragma: no cover
     raw = m.group('name')
     assert len(raw) % 4 == 0
     return ''.join(c for c in raw[2::4])
     
-def name32_3412(m):
+def name32_3412(m): # pragma: no cover
     raw = m.group('name')
     assert len(raw) % 4 == 0
     return ''.join(c for c in raw[1::4])

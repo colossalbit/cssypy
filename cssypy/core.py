@@ -5,14 +5,17 @@ import sys
 
 import six
 
-from . import processors, parsers
+from . import processors, parsers, optionsdict
 
 #==============================================================================#
-def compile_string(src, do_solve=True, do_imports=True):
+def compile_string(src, do_solve=True, do_imports=True, 
+                   propagate_exceptions=True):
     options = {
-        'enable_solve': do_solve,
-        'enable_imports': do_imports,
+        'ENABLE_SOLVE': do_solve,
+        'ENABLE_IMPORTS': do_imports,
+        'PROPAGATE_EXCEPTIONS': propagate_exceptions,
     }
+    options = optionsdict.Options(options)
     proc = processors.Processor(options=options)
     proc.parse_string(src)
     proc.process_imports()

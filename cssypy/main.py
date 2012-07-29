@@ -3,12 +3,12 @@ from __future__ import print_function
 
 import pprint
 
-from .utils import options, reporters
-from . import defs, core
+from .utils import useroptions, reporters
+from . import defs, core, optionsdict
 
 def get_optspec():
-    optspec = options.OptionSpec(usage='%(prog)s [options] INPUT OUTPUT')
-    Opt = options.OptionDef
+    optspec = useroptions.OptionSpec(usage='%(prog)s [options] INPUT OUTPUT')
+    Opt = useroptions.OptionDef
     optspec.add_optdef(
         Opt('input',  metavar='INPUT',  file_option=False, is_argument=True, 
             help='The input stylesheet. Use - to read from stdin.'))
@@ -25,19 +25,19 @@ def get_optspec():
     
     # enable/disable imports
     optspec.add_optdef(
-        Opt('enable_imports',  type=bool, dest='enable_imports', 
+        Opt('enable_imports',  type=bool, dest='ENABLE_IMPORTS', 
             metavar='(yes|no)', default=defs.ENABLE_IMPORTS,
             help='(default: yes)'))
 
     # enable/disable flatten
     optspec.add_optdef(
-        Opt('enable_flatten',  type=bool, dest='enable_flatten', 
+        Opt('enable_flatten',  type=bool, dest='ENABLE_FLATTEN', 
             metavar='(yes|no)', default=defs.ENABLE_FLATTEN,
             help='(default: yes)'))
 
     # enable/disable solve
     optspec.add_optdef(
-        Opt('enable_solve',  type=bool, dest='enable_solve', 
+        Opt('enable_solve',  type=bool, dest='ENABLE_SOLVE', 
             metavar='(yes|no)', default=defs.ENABLE_SOLVE,
             help='(default: yes)'))
     
@@ -45,14 +45,14 @@ def get_optspec():
     # enable/disable imports relative to the current stylesheet
     optspec.add_optdef(
         Opt('curfile_relative_imports',  type=bool, metavar='(enable|disable)', 
-            dest='curfile_relative_imports', 
+            dest='IMPORT_RELATIVE_TO_CURRENT_FILE', 
             default=defs.IMPORT_RELATIVE_TO_CURRENT_FILE,
             help='(default: enable)'))
     
     # enable/disable imports relative to the top-level stylesheet
     optspec.add_optdef(
         Opt('toplevel_relative_imports',  type=bool, metavar='(enable|disable)', 
-            dest='toplevel_relative_imports', 
+            dest='IMPORT_RELATIVE_TO_TOPLEVEL_STYLESHEET', 
             default=defs.IMPORT_RELATIVE_TO_TOPLEVEL_STYLESHEET,
             help='(default: enable)'))
     
@@ -62,7 +62,7 @@ def _main(cmdline=None, reporter=None):
     reporter = reporter or reporters.NullReporter()
     
     optspec = get_optspec()
-    optsreader = options.OptionsReader(optspec, reporter)
+    optsreader = useroptions.OptionsReader(optspec, reporter)
     optdict = optsreader.get_options(cmdline=cmdline)
     
     ifile = optdict.pop('input')
@@ -72,12 +72,14 @@ def _main(cmdline=None, reporter=None):
     dest_encoding = optdict.pop('dest_encoding', None)
     import_directories = []  # TODO
     
+    options = optionsdict.Options(optdict)
+    
     core.compile(ifile, ofile, 
                  source_encoding=source_encoding, 
                  dest_encoding=dest_encoding, 
                  default_encoding=default_encoding, 
                  import_directories=import_directories, 
-                 options=optdict, 
+                 options=options, 
                  reporter=reporter)
 
 def main():     # pragma: no cover

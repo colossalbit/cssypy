@@ -68,5 +68,7 @@ class NullReporter(object):
     def warning(self, msg): pass
     def info(self, msg): pass
     def debug(self, msg): pass
+    
+    def on_syntax_error(self, e): pass
 
 

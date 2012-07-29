@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+
 class CSSError(Exception):
     pass
 
@@ -60,8 +61,16 @@ class CSSEncodingNotFound(CSSError):
     pass
     
 class CSSTypeError(CSSError):
+    """Raised when an unsupported operation is attempted on CSS values.
+    
+    For example, the expression:
+        "abc" + 5
+    would raise a CSSTypeError because strings and numbers cannot be added
+    together.
+    """
     pass
     
 class CSSVarNameError(CSSError):
+    """Raised when an undefined name is referenced."""
     pass
 
