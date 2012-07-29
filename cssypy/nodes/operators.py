@@ -11,10 +11,11 @@ PRECEDENCE_COMMA =  1
 
 #==============================================================================#
 class UnaryOperator(Node):
+    __slots__ = ()
     _precedence = -1
-    pass
         
 class UMinus(UnaryOperator):
+    __slots__ = ()
     _precedence = PRECEDENCE_UNARY
     def __eq__(self, other):
         if isinstance(other, UMinus):
@@ -28,6 +29,7 @@ class UMinus(UnaryOperator):
         return hash(UMinus)
         
 class UPlus(UnaryOperator):
+    __slots__ = ()
     _precedence = PRECEDENCE_UNARY
     def __eq__(self, other):
         if isinstance(other, UPlus):
@@ -42,10 +44,12 @@ class UPlus(UnaryOperator):
         
 #==============================================================================#
 class BinaryOperator(Node):
+    __slots__ = ()
     _precedence = -1
     _nary = False
     
 class CommaOp(BinaryOperator):
+    __slots__ = ()
     _precedence = PRECEDENCE_COMMA
     _nary = True
     def __eq__(self, other):
@@ -60,6 +64,7 @@ class CommaOp(BinaryOperator):
         return hash(CommaOp)
     
 class FwdSlashOp(BinaryOperator):
+    __slots__ = ()
     _precedence = PRECEDENCE_BINMUL
     def __eq__(self, other):
         if isinstance(other, FwdSlashOp):
@@ -74,6 +79,7 @@ class FwdSlashOp(BinaryOperator):
     
 class DivisionOp(BinaryOperator):
     # Used when we know '/' means division
+    __slots__ = ()
     _precedence = PRECEDENCE_BINMUL
     def __eq__(self, other):
         if isinstance(other, DivisionOp):
@@ -87,6 +93,7 @@ class DivisionOp(BinaryOperator):
         return hash(DivisionOp)
     
 class WhitespaceOp(BinaryOperator):
+    __slots__ = ()
     _precedence = PRECEDENCE_WS
     _nary = True
     def __eq__(self, other):
@@ -101,6 +108,7 @@ class WhitespaceOp(BinaryOperator):
         return hash(WhitespaceOp)
     
 class AddOp(BinaryOperator):
+    __slots__ = ()
     _precedence = PRECEDENCE_BINADD
     def __eq__(self, other):
         if isinstance(other, AddOp):
@@ -114,6 +122,7 @@ class AddOp(BinaryOperator):
         return hash(AddOp)
     
 class SubtractOp(BinaryOperator):
+    __slots__ = ()
     _precedence = PRECEDENCE_BINADD
     def __eq__(self, other):
         if isinstance(other, SubtractOp):
@@ -127,6 +136,7 @@ class SubtractOp(BinaryOperator):
         return hash(SubtractOp)
     
 class MultOp(BinaryOperator):
+    __slots__ = ()
     _precedence = PRECEDENCE_BINMUL
     def __eq__(self, other):
         if isinstance(other, MultOp):
@@ -143,39 +153,45 @@ class MultOp(BinaryOperator):
 #==============================================================================#
 # Operators for the AttributeSelector node
 class AttributeSelectorOp(Node):
-    pass
+    __slots__ = ()
         
 class AttrPrefixMatchOp(AttributeSelectorOp):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, AttrPrefixMatchOp):
             return True  # all instances are identical
         return NotImplemented
         
 class AttrSuffixMatchOp(AttributeSelectorOp):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, AttrSuffixMatchOp):
             return True  # all instances are identical
         return NotImplemented
         
 class AttrSubstringMatchOp(AttributeSelectorOp):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, AttrSubstringMatchOp):
             return True  # all instances are identical
         return NotImplemented
         
 class AttrExactMatchOp(AttributeSelectorOp):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, AttrExactMatchOp):
             return True  # all instances are identical
         return NotImplemented
         
 class AttrIncludesMatchOp(AttributeSelectorOp):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, AttrIncludesMatchOp):
             return True  # all instances are identical
         return NotImplemented
         
 class AttrDashMatchOp(AttributeSelectorOp):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, AttrDashMatchOp):
             return True  # all instances are identical

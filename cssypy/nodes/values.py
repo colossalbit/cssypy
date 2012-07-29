@@ -30,6 +30,8 @@ _datatype_to_node = {}
 
 # Values
 class CSSValueNode(Node):
+    __slots__ = ()
+    
     def to_value(self):
         raise NotImplementedError() # pragma: no cover
         
@@ -60,8 +62,8 @@ re_dimension = re.compile(ur'^(?P<num>[0-9\.]+)(?P<unit>[^0-9\.].*)$')
 
 class DimensionNode(CSSValueNode):
     _fields = ('number', 'unit')
+    __slots__ = _fields
     _precision = 3
-    # TODO: lineno
     
     def __init__(self, number=None, unit=None, **kwargs):
         super(DimensionNode, self).__init__(**kwargs)
@@ -103,8 +105,8 @@ _datatype_to_node[datatypes.Dimension] = DimensionNode
 #==============================================================================#
 class PercentageNode(CSSValueNode):
     _fields = ('pct',)
+    __slots__ = _fields
     _precision = 1
-    # TODO: lineno
     
     def __init__(self, pct, **kwargs):
         super(PercentageNode, self).__init__(**kwargs)
@@ -137,8 +139,8 @@ _datatype_to_node[datatypes.Percentage] = PercentageNode
 #==============================================================================#
 class NumberNode(CSSValueNode):
     _fields = ('number',)
+    __slots__ = _fields
     _precision = 3
-    # TODO: lineno
     
     def __init__(self, number, **kwargs):
         super(NumberNode, self).__init__(**kwargs)
@@ -174,8 +176,8 @@ _datatype_to_node[datatypes.Number] = NumberNode
 #==============================================================================#
 class StringNode(CSSValueNode):
     _fields = ('string',)
+    __slots__ = _fields
     _precision = 3
-    # TODO: lineno
     
     def __init__(self, string, **kwargs):
         super(StringNode, self).__init__(**kwargs)
@@ -198,15 +200,15 @@ class StringNode(CSSValueNode):
 
 class UriNode(CSSValueNode):
     _fields = ('uri',)
-    # TODO: lineno
+    __slots__ = _fields
     
     w = r'(?:[ \t\r\n\f]*)'
     string1 = r'(?:"(?:[^"\\\r\n]|\\[^\r\n])*")'
     string2 = r"(?:'(?:[^'\\\r\n]|\\[^\r\n])*')"
     string = r'(?P<string>{string1}|{string2})'.format(string1=string1, string2=string2)
     bareuri = r'(?P<bareuri>(?:[^"\'\\\r\n\t \(\)]|\\[^\r\n])+)'
-    uri = r'[Uu][Rr][Ll]\({w}(?:{string}|{bareuri}){w}\)'.format(w=w, string=string, bareuri=bareuri)
-    re_uri = re.compile(uri, re.UNICODE)
+    _uri = r'[Uu][Rr][Ll]\({w}(?:{string}|{bareuri}){w}\)'.format(w=w, string=string, bareuri=bareuri)
+    re_uri = re.compile(_uri, re.UNICODE)
     
     def __init__(self, uri, **kwargs):
         super(UriNode, self).__init__(**kwargs)
@@ -256,6 +258,8 @@ def _color_to_hsl_string(color):
     
 
 class ColorNode(CSSValueNode):
+    __slots__ = ()
+    
     def to_value(self):
         raise NotImplementedError() # pragma: no cover
         
@@ -298,7 +302,8 @@ class ColorNode(CSSValueNode):
     
 class HexColorNode(ColorNode):
     _fields = ('hex',)
-    # TODO: lineno
+    __slots__ = _fields
+    
     def __init__(self, hex, **kwargs):
         super(HexColorNode, self).__init__(**kwargs)
         assert isinstance(hex, six.string_types)

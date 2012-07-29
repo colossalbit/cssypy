@@ -7,7 +7,7 @@ from ..utils import stringutil
 #==============================================================================#
 class Selector(Node):
     _fields = ('children',)
-    # TODO: lineno
+    __slots__ = _fields
     def __init__(self, children, **kwargs):
         super(Selector, self).__init__(**kwargs)
         if isinstance(children, SimpleSelectorSequence):
@@ -30,7 +30,7 @@ class Selector(Node):
         
 class SimpleSelectorSequence(Node):
     _fields = ('head', 'tail',)
-    # TODO: lineno
+    __slots__ = _fields
     # head can contain: TypeSelector, UniversalSelector, CombineAncestorSelector
     # tail can contain: IdSelector, ClassSelector, PseudoSelector
     def __init__(self, head, tail, **kwargs):
@@ -49,17 +49,17 @@ class SimpleSelectorSequence(Node):
 #==============================================================================#
 # Simple Selectors
 class SimpleSelector(Node):
-    # TODO: lineno
-    pass
+    __slots__ = ()
     
 class HeadSimpleSelector(SimpleSelector):
-    pass
+    __slots__ = ()
     
 class TailSimpleSelector(SimpleSelector):
-    pass
+    __slots__ = ()
     
 class IdSelector(TailSimpleSelector):
     _fields = ('name',)
+    __slots__ = _fields
     def __init__(self, name, **kwargs):
         super(IdSelector, self).__init__(**kwargs)
         self.name = name
@@ -76,6 +76,7 @@ class IdSelector(TailSimpleSelector):
     
 class TypeSelector(HeadSimpleSelector):
     _fields = ('name',)
+    __slots__ = _fields
     def __init__(self, name, **kwargs):
         super(TypeSelector, self).__init__(**kwargs)
         self.name = name
@@ -90,12 +91,14 @@ class TypeSelector(HeadSimpleSelector):
         return NotImplemented
     
 class UniversalSelector(HeadSimpleSelector):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, UniversalSelector):
             return True  # all instances are identical
         return NotImplemented
     
 class CombineAncestorSelector(HeadSimpleSelector):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, CombineAncestorSelector):
             return True  # all instances are identical
@@ -103,6 +106,7 @@ class CombineAncestorSelector(HeadSimpleSelector):
     
 class ClassSelector(TailSimpleSelector):
     _fields = ('name',)
+    __slots__ = _fields
     def __init__(self, name, **kwargs):
         super(ClassSelector, self).__init__(**kwargs)
         self.name = name
@@ -117,10 +121,11 @@ class ClassSelector(TailSimpleSelector):
         return NotImplemented
     
 class PseudoSelector(TailSimpleSelector):
-    pass
+    __slots__ = ()
         
 class PseudoClassSelector(PseudoSelector):
     _fields = ('node',)
+    __slots__ = _fields
     def __init__(self, node, **kwargs):
         super(PseudoClassSelector, self).__init__(**kwargs)
         # can be a function or an ident
@@ -133,6 +138,7 @@ class PseudoClassSelector(PseudoSelector):
         
 class PseudoElementSelector(PseudoSelector):
     _fields = ('node',)
+    __slots__ = _fields
     def __init__(self, node, **kwargs):
         super(PseudoElementSelector, self).__init__(**kwargs)
         # can be a function or an ident
@@ -145,6 +151,7 @@ class PseudoElementSelector(PseudoSelector):
         
 class NegationSelector(TailSimpleSelector):
     _fields = ('arg',)
+    __slots__ = _fields
     def __init__(self, arg, **kwargs):
         super(NegationSelector, self).__init__(**kwargs)
         # can be a function or an ident
@@ -157,6 +164,7 @@ class NegationSelector(TailSimpleSelector):
         
 class AttributeSelector(TailSimpleSelector):
     _fields = ('attr', 'op', 'val')
+    __slots__ = _fields
     def __init__(self, attr, op=None, val=None, **kwargs):
         super(AttributeSelector, self).__init__(**kwargs)
         assert (op is None and val is None) or (op is not None and val is not None)
@@ -177,27 +185,31 @@ class AttributeSelector(TailSimpleSelector):
 #==============================================================================#
 # Combinators
 class Combinator(Node):
-    pass
+    __slots__ = ()
     
 class AdjacentSiblingCombinator(Combinator):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, AdjacentSiblingCombinator):
             return True  # all instances are identical
         return NotImplemented
     
 class ChildCombinator(Combinator):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, ChildCombinator):
             return True  # all instances are identical
         return NotImplemented
     
 class GeneralSiblingCombinator(Combinator):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, GeneralSiblingCombinator):
             return True  # all instances are identical
         return NotImplemented
     
 class DescendantCombinator(Combinator):
+    __slots__ = ()
     def __eq__(self, other):
         if isinstance(other, DescendantCombinator):
             return True  # all instances are identical

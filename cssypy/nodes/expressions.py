@@ -6,15 +6,14 @@ from .values import CSSValueNode
 from ..utils import stringutil
         
 class Expr(Node):
-    pass
+    __slots__ = ()
 
 class IdentExpr(Ident, Expr):
-    # TODO: lineno
-    pass
+    __slots__ = ()
     
 class VarName(Expr):
     _fields = ('name',)
-    # TODO: lineno
+    __slots__ = _fields
     def __init__(self, name, **kwargs):
         super(VarName, self).__init__(**kwargs)
         self.name = name
@@ -37,7 +36,7 @@ class VarName(Expr):
 
 class FunctionExpr(Expr):
     _fields = ('name', 'expr')
-    # TODO: lineno
+    __slots__ = _fields
     def __init__(self, name, expr, **kwargs):
         super(FunctionExpr, self).__init__(**kwargs)
         # expr may be None
@@ -55,8 +54,8 @@ class FunctionExpr(Expr):
         return NotImplemented
     
 class UnaryOpExpr(Expr):
-    # TODO: lineno
     _fields = ('op', 'operand')
+    __slots__ = _fields
     def __init__(self, op, operand, **kwargs):
         super(UnaryOpExpr, self).__init__(**kwargs)
         assert isinstance(operand, (Expr, CSSValueNode))
@@ -75,8 +74,8 @@ class UnaryOpExpr(Expr):
         return '<UnaryOpExpr object: {0!r}>'.format(str(self))
     
 class BinaryOpExpr(Expr):
-    # TODO: lineno
     _fields = ('op', 'lhs', 'rhs')
+    __slots__ = _fields
     def __init__(self, op, lhs, rhs, **kwargs):
         super(BinaryOpExpr, self).__init__(**kwargs)
         assert isinstance(lhs, (Expr, CSSValueNode))
@@ -99,7 +98,7 @@ class BinaryOpExpr(Expr):
 
 class NaryOpExpr(Expr):
     _fields = ('op', 'operands')
-    # TODO: lineno
+    __slots__ = _fields
     def __init__(self, op, operand1=None, operand2=None, operands=None, 
                  **kwargs):
         super(NaryOpExpr, self).__init__(**kwargs)

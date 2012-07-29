@@ -20,6 +20,7 @@ class Node(object):
 
 class Stylesheet(Node):
     _fields = ('charset', 'imports', 'statements',)
+    __slots__ = _fields
     def __init__(self, charset, imports, statements):
         assert all(isinstance(stmt, Statement) for stmt in statements)
         self.charset = charset
@@ -28,6 +29,7 @@ class Stylesheet(Node):
         
 class ImportedStylesheet(Node):
     _fields = ('imports', 'statements',)
+    __slots__ = _fields
     # TODO: this should get lineno from Import node
     def __init__(self, imports, statements, **kwargs):
         super(ImportedStylesheet, self).__init__(**kwargs)
@@ -37,6 +39,7 @@ class ImportedStylesheet(Node):
         
 class Charset(Node):
     _fields = ('charset',)
+    __slots__ = _fields
     def __init__(self, charset, **kwargs):
         super(Charset, self).__init__(**kwargs)
         self.charset = charset
@@ -47,7 +50,7 @@ class Charset(Node):
         
 class Import(Node):
     _fields = ('uri',)
-    # TODO: lineno
+    __slots__ = _fields
     # TODO: should this be a statement?
     def __init__(self, uri, **kwargs):
         super(Import, self).__init__(**kwargs)
@@ -58,7 +61,7 @@ class Statement(Node):
     
 class RuleSet(Statement):
     _fields = ('selectors', 'statements',)
-    # TODO: lineno
+    __slots__ = _fields
     def __init__(self, selectors, statements, **kwargs):
         super(RuleSet, self).__init__(**kwargs)
         assert all(isinstance(stmt, Statement) for stmt in statements)
@@ -74,7 +77,7 @@ class RuleSet(Statement):
 
 class Declaration(Statement):
     _fields = ('property', 'expr', 'important',)
-    # TODO: lineno
+    __slots__ = _fields
     def __init__(self, prop, expr, important=False, **kwargs):
         super(Declaration, self).__init__(**kwargs)
         assert expr is None or isinstance(expr, Node)
@@ -92,8 +95,8 @@ class Declaration(Statement):
         
         
 class VarDef(Statement):
-    # TODO: lineno
     _fields = ('name', 'expr')
+    __slots__ = _fields
     def __init__(self, name, expr, **kwargs):
         super(VarDef, self).__init__(**kwargs)
         assert isinstance(expr, Node)
@@ -112,8 +115,8 @@ class VarDef(Statement):
         return NotImplemented
     
 class Property(Node):
-    # TODO: lineno
     _fields = ('name',)
+    __slots__ = _fields
     def __init__(self, name, **kwargs):
         super(Property, self).__init__(**kwargs)
         self.name = name
@@ -129,8 +132,8 @@ class Property(Node):
 
     
 class Ident(Node):
-    # TODO: lineno
     _fields = ('name',)
+    __slots__ = _fields
     def __init__(self, name, **kwargs):
         super(Ident, self).__init__(**kwargs)
         self.name = name
