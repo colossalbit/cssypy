@@ -240,7 +240,7 @@ class Color(DataType):
     #   ADD, SUB, MUL, DIV with Number
     #   ADD, SUB with Color
     def __init__(self, rgb=None, hsl=None, format=None):
-        assert format and format.lower() in (u'hex',u'hsl')
+        assert format and format.lower() in (u'hex',u'hsl',u'rgb')
         self.format = format.lower()
         if rgb:
             assert isinstance(rgb, tuple)

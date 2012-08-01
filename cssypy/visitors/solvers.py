@@ -5,7 +5,7 @@ import operator
 import itertools
 
 from .base import NodeTransformer
-from .. import nodes, errors
+from .. import nodes, errors, datatypes, functions
 
 ifilter = itertools.ifilter
 
@@ -190,14 +190,39 @@ class Solver(NodeTransformer):
             raise RuntimeError()  # pragma: no cover
         
     def visit_NaryOpExpr(self, node):
-        ##node.operands = [self.value_as_node(self.visit(operand)) for operand in node.operands]
         node.operands = list(ifilter(bool, (self.visit(operand) for operand in node.operands)))
         return node
         
-    def visit_Function(self, node):
+    def call_function(self, name, operands):
+        # 1. check that function exists
+        #   - function doesn't exist - not an error
+        try:
+            func = functions.get_function(name, len(operands))
+        except errors.CSSFunctionNotFound:
+            return None
+        # 2. convert operands to values
+        # 2.a. handle error on conversion
+        #   - no to_value() method - not an error
+        #   - error raised by to_value() - (probably an error--just like if to_value fails elsewhere)
+        try:
+            args = tuple(self.node_as_value(x) for x in operands)
+        except Exception:
+            return None
+        # 3. call function
+        # 3.a. handle error raised by calling function
+        #   - bad argument types - not an error?--perhaps an option?
+        try:
+            return func(*args)
+        except Exception:
+            return None
+        
+    def visit_FunctionExpr(self, node):
         # TODO: certain functions are handled specially:
         #   rgb(), hsl(), rgba(), hsla() become Colors
         node.expr = self.visit(node.expr)
+        r = self.call_function(node.name, node.expr.operands)
+        if r is not None:
+            return r
         return node
 
 

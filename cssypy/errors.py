@@ -70,7 +70,19 @@ class CSSTypeError(CSSError):
     """
     pass
     
-class CSSVarNameError(CSSError):
+class CSSNameError(CSSError):
+    pass
+    
+class CSSValueError(CSSError):
+    pass
+    
+class CSSVarNameError(CSSNameError):
     """Raised when an undefined name is referenced."""
+    pass
+    
+class CSSFunctionNotFound(CSSNameError):
+    pass
+    
+class CSSFunctionOverloadNotFound(CSSNameError):
     pass
 

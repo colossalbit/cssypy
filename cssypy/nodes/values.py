@@ -185,7 +185,7 @@ class StringNode(CSSValueNode):
         self.string = string
         
     def to_value(self):
-        raise NotImplementedError() # TODO
+        return datatypes.String(self.string)
         
     def from_value(cls, value):
         return cls(string=six.text_type(value))
@@ -352,15 +352,65 @@ class HexColorNode(ColorNode):
         if isinstance(other, HexColorNode):
             return self.normalized_hex() == other.normalized_hex()
         return super(HexColorNode, self).__eq__(other)
+        
+        
+def _rgb_component_str(x):
+    if x.endswith(u'%'):
+        return six.text_type(float(x[:-1]) * 255. / 100.)
+    else:
+        return x
+        
+        
+class RGBColorNode(ColorNode):
+    _fields = ('r','g','b',)
+    __slots__ = _fields
+    
+    def __init__(self, r, g, b, **kwargs):
+        super(RGBColorNode, self).__init__(**kwargs)
+        r,g,b = tuple(_rgb_component_str(x) for x in (r,g,b))
+        self.r = r
+        self.g = g
+        self.b = b
+            
+    def to_value(self):
+        r,g,b = float(self.r), float(self.g), float(self.b)
+        return datatypes.Color(rgb=(r,g,b), format='rgb')
+        
+    @classmethod
+    def from_value(cls, value):
+        r, g, b, a = value.rgba
+        r = six.text_type(r)
+        g = six.text_type(g)
+        b = six.text_type(b)
+        return cls(r=r, g=g, b=b)
+            
+    def to_string_rgb(self):
+        return u'rgb({},{},{})'.format(self.r, self.g, self.b)
+        
+    def to_string_any(self):
+        return self.to_string_rgb()
+        
+    @classmethod
+    def from_string(cls, string, **kwargs):
+        raise NotImplementedError()
+        
+    def __eq__(self, other):
+        if isinstance(other, RGBColorNode):
+            return self.r == other.r and self.g == other.g and self.b == other.b
+        return super(RGBColorNode, self).__eq__(other)
+    
     
     
 def _color_node_factory(value):
     assert isinstance(value, datatypes.Color)
     if value.format == 'hex':
         return HexColorNode.from_value(value)
+    elif value.format == 'rgb':
+        return RGBColorNode.from_value(value)
     else:
         raise RuntimeError()
 
+_color_node_factory.from_value = _color_node_factory
 _datatype_to_node[datatypes.Color] = _color_node_factory
 
 #==============================================================================#

@@ -21,6 +21,7 @@ nextid = 0x1
 
 def tok(name, regex=None, id=None, ext=False, family=0):
     global nextid
+    assert name == name.upper()
     id = id or nextid
     id |= family
     if ext:

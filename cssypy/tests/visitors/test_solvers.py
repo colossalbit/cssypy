@@ -237,6 +237,21 @@ class Solver_TestCase(base.TestCaseBase):
                 ]
             )
         self.assertEqual(dump(expected), dump(stylesheet))
+    
+    def test_rgb_func(self):
+        src = u'prop: rgb(0,0,0) ;'
+        parser = parsers.Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        decl = parser.declaration()
+        solver = solvers.Solver()
+        decl = solver.visit(decl)
+        expected = \
+            Declaration(
+                prop=Property(name=u'prop'),
+                expr=RGBColorNode(r=u'0', g=u'0', b=u'0'),
+                important=False,
+            )
+        self.assertEqual(dump(expected), dump(decl))
 
 
 

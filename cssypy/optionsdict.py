@@ -20,16 +20,19 @@ class Options(object):
         self.opts = _populate_options(opts)
         
     def __getitem__(self, name):
-        return self.opts[name.upper()]
+        assert name == name.upper()
+        return self.opts[name]
         
     def __getattr__(self, name):
+        assert name == name.upper()
         try:
-            return self.opts[name.upper()]
+            return self.opts[name]
         except KeyError:
             msg = "'{}' object has no attribute '{}'"
             raise AttributeError(msg.format(type(self).__name__, name))
             
     def get(self, name, default=None):
-        return self.opts.get(name.upper(), default)
+        assert name == name.upper()
+        return self.opts.get(name, default)
 
 
