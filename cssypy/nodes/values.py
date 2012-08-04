@@ -24,6 +24,12 @@ def _strip_trailing_zeros(s, remove_decimal_point=True):
     if not s:
         return u'0'
     return s
+    
+def _int_or_float(n):
+    try:
+        return int(n)
+    except ValueError:
+        return float(n)
 
 #==============================================================================#
 _datatype_to_node = {}
@@ -148,10 +154,7 @@ class NumberNode(CSSValueNode):
         self.number = number
         
     def to_value(self):
-        try:
-            return datatypes.Number(int(self.number))
-        except ValueError:
-            return datatypes.Number(float(self.number))
+        return datatypes.Number(_int_or_float(self.number))
         
     @classmethod
     def from_value(cls, value):
@@ -212,6 +215,7 @@ class UriNode(CSSValueNode):
     
     def __init__(self, uri, **kwargs):
         super(UriNode, self).__init__(**kwargs)
+        assert isinstance(uri, six.string_types)
         self.uri = uri
         
     def to_value(self):
@@ -334,7 +338,11 @@ class HexColorNode(ColorNode):
         
     @classmethod
     def from_value(cls, value):
-        raise NotImplementedError() # TODO
+        rgb = value.rgba[0:3]
+        r = u'{0:02X}'.format(int(rgb[0]))
+        g = u'{0:02X}'.format(int(rgb[1]))
+        b = u'{0:02X}'.format(int(rgb[2]))
+        return cls(u'{}{}{}'.format(r,g,b))
             
     def to_string_hex(self):
         return u'#{0}'.format(self.hex)
@@ -367,14 +375,15 @@ class RGBColorNode(ColorNode):
     
     def __init__(self, r, g, b, **kwargs):
         super(RGBColorNode, self).__init__(**kwargs)
+        assert isinstance(r, six.string_types) and isinstance(g, six.string_types) and isinstance(b, six.string_types)
         r,g,b = tuple(_rgb_component_str(x) for x in (r,g,b))
         self.r = r
         self.g = g
         self.b = b
             
     def to_value(self):
-        r,g,b = float(self.r), float(self.g), float(self.b)
-        return datatypes.Color(rgb=(r,g,b), format='rgb')
+        rgb = float(self.r), float(self.g), float(self.b)
+        return datatypes.Color(rgb=rgb, format='rgb')
         
     @classmethod
     def from_value(cls, value):
@@ -382,7 +391,8 @@ class RGBColorNode(ColorNode):
         r = six.text_type(r)
         g = six.text_type(g)
         b = six.text_type(b)
-        return cls(r=r, g=g, b=b)
+        return cls(r=_strip_trailing_zeros(r), g=_strip_trailing_zeros(g), 
+                   b=_strip_trailing_zeros(b))
             
     def to_string_rgb(self):
         return u'rgb({},{},{})'.format(self.r, self.g, self.b)
@@ -396,6 +406,7 @@ class RGBColorNode(ColorNode):
         
     def __eq__(self, other):
         if isinstance(other, RGBColorNode):
+            # TODO: handle cases where self.r == '0' and other.r == '0.0', etc.
             return self.r == other.r and self.g == other.g and self.b == other.b
         return super(RGBColorNode, self).__eq__(other)
     
@@ -406,21 +417,23 @@ class HSLColorNode(ColorNode):
     
     def __init__(self, h, s, l, **kwargs):
         super(HSLColorNode, self).__init__(**kwargs)
+        assert isinstance(h, six.string_types) and isinstance(s, six.string_types) and isinstance(l, six.string_types)
         self.h = h
         self.s = s
         self.l = l
             
     def to_value(self):
-        r,g,b = float(self.r), float(self.g), float(self.b)
-        return datatypes.Color(rgb=(r,g,b), format='rgb')
+        hsl = float(self.h), float(self.s)/100., float(self.l)/100.
+        return datatypes.Color(hsl=hsl, format='hsl')
         
     @classmethod
     def from_value(cls, value):
         h, s, l, a = value.hsla
         h = six.text_type(h)
-        s = six.text_type(s)
-        l = six.text_type(l)
-        return cls(h=h, s=s, l=l)
+        s = six.text_type(s * 100)
+        l = six.text_type(l * 100)
+        return cls(h=_strip_trailing_zeros(h), s=_strip_trailing_zeros(s), 
+                   l=_strip_trailing_zeros(l))
             
     def to_string_hsl(self):
         return u'hsl({},{}%,{}%)'.format(self.h, self.s, self.l)
@@ -434,6 +447,7 @@ class HSLColorNode(ColorNode):
         
     def __eq__(self, other):
         if isinstance(other, HSLColorNode):
+            # TODO: handle cases where self.h == '0' and other.h == '0.0', etc.
             return self.h == other.h and self.s == other.s and self.l == other.l
         return super(HSLColorNode, self).__eq__(other)
     

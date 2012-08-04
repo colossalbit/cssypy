@@ -303,7 +303,22 @@ class Solver_TestCase(base.TestCaseBase):
         expected = \
             Declaration(
                 prop=Property(name=u'prop'),
-                expr=HSLColorNode(h=u'0.0', s=u'0.0', l=u'0.0'),
+                expr=HSLColorNode(h=u'0', s=u'0', l=u'0'),
+                important=False,
+            )
+        self.assertEqual(dump(expected), dump(decl))
+    
+    def test_hsl_func2(self):
+        src = u'prop: hsl(180,50%,75%) ;'
+        parser = parsers.Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        decl = parser.declaration()
+        solver = solvers.Solver()
+        decl = solver.visit(decl)
+        expected = \
+            Declaration(
+                prop=Property(name=u'prop'),
+                expr=HSLColorNode(h=u'180', s=u'50', l=u'75'),
                 important=False,
             )
         self.assertEqual(dump(expected), dump(decl))
