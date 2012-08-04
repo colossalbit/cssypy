@@ -27,6 +27,14 @@ class HexColorNode_TestCase(base.TestCaseBase):
         self.assertEqual(u'#AABBCC', HexColorNode(hex=u'AABBCC').to_string())
         self.assertEqual(u'#ABC', HexColorNode(hex=u'ABC').to_string())
         self.assertEqual(u'#AABBC0', HexColorNode(hex=u'AABBC0').to_string())
+        self.assertEqual(u'#AABBCC', HexColorNode(hex=u'AABBCC').to_string(format='hex'))
+        self.assertEqual(u'rgb(170,187,204)', HexColorNode(hex=u'AABBCC').to_string(format='rgb'))
+        
+    def test_to_string_rgb(self):
+        self.assertEqual(u'rgb(170,187,204)', HexColorNode(hex=u'AABBCC').to_string_rgb())
+        
+    def test_to_string_hsl(self):
+        self.assertEqual(u'hsl(240,100%,50%)', HexColorNode(hex=u'0000FF').to_string_hsl())
 
 
 #==============================================================================#
@@ -38,6 +46,30 @@ class RGBColorNode_TestCase(base.TestCaseBase):
     def test_from_value(self):
         c = datatypes.Color(rgb=(127,1,51), format='rgb')
         self.assertEqual(RGBColorNode(r=u'127', g=u'1', b=u'51'), RGBColorNode.from_value(c))
+        
+    def test_to_string(self):
+        self.assertEqual(u'rgb(127,1,51)', RGBColorNode(r=u'127', g=u'1', b=u'51').to_string())
+        self.assertEqual(u'#7F0133', RGBColorNode(r=u'127', g=u'1', b=u'51').to_string(format='hex'))
+        self.assertEqual(u'rgb(127,1,51)', RGBColorNode(r=u'127', g=u'1', b=u'51').to_string(format='rgb'))
+        
+    def test_to_string_hex(self):
+        self.assertEqual(u'#7F0133', RGBColorNode(r=u'127', g=u'1', b=u'51').to_string_hex())
+        self.assertEqual(u'#ABC', RGBColorNode(r=u'170', g=u'187', b=u'204').to_string_hex())
+
+
+#==============================================================================#
+class HSLColorNode_TestCase(base.TestCaseBase):
+    def test_to_value(self):
+        self.assertEqual(datatypes.Color(hsl=(180,0.25,0.50), format='hsl'), 
+                         HSLColorNode(h=u'180', s=u'25', l=u'50').to_value())
+                         
+    def test_from_value(self):
+        c = datatypes.Color(hsl=(180,0.25,0.50), format='hsl')
+        self.assertEqual(HSLColorNode(h=u'180', s=u'25', l=u'50'), HSLColorNode.from_value(c))
+        
+    def test_to_string(self):
+        self.assertEqual(u'hsl(180,25%,50%)', HSLColorNode(h=u'180', s=u'25', l=u'50').to_string())
+        self.assertEqual(u'hsl(180,25%,50%)', HSLColorNode(h=u'180', s=u'25', l=u'50').to_string(format='hsl'))
                          
 
 #==============================================================================#
@@ -52,6 +84,10 @@ class PercentageNode_TestCase(base.TestCaseBase):
     def test_equal(self):
         self.assertEqual(PercentageNode(pct='25'), PercentageNode(pct='25'))
         self.assertEqual(PercentageNode(pct='46.0'), PercentageNode(pct='46'))
+        
+    def test_from_value(self):
+        self.assertEqual(PercentageNode(pct=u'25'),
+                         PercentageNode.from_value(datatypes.Percentage(25)))
                          
 
 #==============================================================================#

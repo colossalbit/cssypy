@@ -244,21 +244,27 @@ class UriNode(CSSValueNode):
 #==============================================================================#
 def _color_to_hex_string(color):
     assert isinstance(color, datatypes.Color)
-    r = u'{0:02X}'.format(color.r)
-    g = u'{0:02X}'.format(color.g)
-    b = u'{0:02X}'.format(color.b)
+    r,g,b = color.rgba[0:3]
+    r = u'{0:02X}'.format(int(r))
+    g = u'{0:02X}'.format(int(g))
+    b = u'{0:02X}'.format(int(b))
     if r[0]==r[1] and g[0]==g[1] and b[0]==b[1]:
-        return u'{0}{1}{2}'.format(r[0], g[0], b[0])
+        return u'#{0}{1}{2}'.format(r[0], g[0], b[0])
     else:
-        return u'{0}{1}{2}'.format(r, g, b)
+        return u'#{0}{1}{2}'.format(r, g, b)
         
 def _color_to_rgb_string(color):
     assert isinstance(color, datatypes.Color)
-    return u'rgb({0},{1},{2})'.format(color.r, color.g, color.b)
+    rgb = color.rgba[0:3]
+    r,g,b = tuple(_strip_trailing_zeros(str(x)) for x in rgb)
+    return u'rgb({0},{1},{2})'.format(r, g, b)
         
 def _color_to_hsl_string(color):
     assert isinstance(color, datatypes.Color)
-    return u'hsl({0},{1},{2})'.format(color.h, color.s, color.l)
+    ##h,s,l = color.hsla[0:3]
+    hsl = HSLColorNode.from_value(color)
+    return hsl.to_string_hsl()
+    ##return u'hsl({0},{1}%,{2}%)'.format(h, s*100, l*100)
     
 
 class ColorNode(CSSValueNode):
@@ -269,7 +275,7 @@ class ColorNode(CSSValueNode):
         
     @classmethod
     def from_value(cls, value):
-        raise NotImplementedError() # TODO
+        raise NotImplementedError() # pragme: no cover
         
     def to_string_any(self):
         raise NotImplementedError() # pragma: no cover
@@ -286,7 +292,7 @@ class ColorNode(CSSValueNode):
     def to_string(self, format='any'):
         if format=='any':
             return self.to_string_any()
-        if format=='hex':
+        elif format=='hex':
             return self.to_string_hex()
         elif format=='hsl':
             return self.to_string_hsl()
@@ -406,8 +412,9 @@ class RGBColorNode(ColorNode):
         
     def __eq__(self, other):
         if isinstance(other, RGBColorNode):
-            # TODO: handle cases where self.r == '0' and other.r == '0.0', etc.
-            return self.r == other.r and self.g == other.g and self.b == other.b
+            return (float(self.r) == float(other.r) and 
+                    float(self.g) == float(other.g) and 
+                    float(self.b) == float(other.b))
         return super(RGBColorNode, self).__eq__(other)
     
         
@@ -418,10 +425,12 @@ class HSLColorNode(ColorNode):
     def __init__(self, h, s, l, **kwargs):
         super(HSLColorNode, self).__init__(**kwargs)
         assert isinstance(h, six.string_types) and isinstance(s, six.string_types) and isinstance(l, six.string_types)
+        # h: 0..360
+        # s,l: 0..100
         self.h = h
         self.s = s
         self.l = l
-            
+        
     def to_value(self):
         hsl = float(self.h), float(self.s)/100., float(self.l)/100.
         return datatypes.Color(hsl=hsl, format='hsl')
@@ -447,8 +456,9 @@ class HSLColorNode(ColorNode):
         
     def __eq__(self, other):
         if isinstance(other, HSLColorNode):
-            # TODO: handle cases where self.h == '0' and other.h == '0.0', etc.
-            return self.h == other.h and self.s == other.s and self.l == other.l
+            return (float(self.h) == float(other.h) and 
+                    float(self.s) == float(other.s) and 
+                    float(self.l) == float(other.l))
         return super(HSLColorNode, self).__eq__(other)
     
     
