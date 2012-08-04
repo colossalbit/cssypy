@@ -18,6 +18,7 @@ class Number(DataType):
     # allowed ops:
     #   ADD, SUB, MUL, DIV with Number
     #   UADD, USUB
+    #   conversion to int?, float?
     def __init__(self, number):
         self.n = number
         

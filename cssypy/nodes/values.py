@@ -399,6 +399,44 @@ class RGBColorNode(ColorNode):
             return self.r == other.r and self.g == other.g and self.b == other.b
         return super(RGBColorNode, self).__eq__(other)
     
+        
+class HSLColorNode(ColorNode):
+    _fields = ('h','s','l',)
+    __slots__ = _fields
+    
+    def __init__(self, h, s, l, **kwargs):
+        super(HSLColorNode, self).__init__(**kwargs)
+        self.h = h
+        self.s = s
+        self.l = l
+            
+    def to_value(self):
+        r,g,b = float(self.r), float(self.g), float(self.b)
+        return datatypes.Color(rgb=(r,g,b), format='rgb')
+        
+    @classmethod
+    def from_value(cls, value):
+        h, s, l, a = value.hsla
+        h = six.text_type(h)
+        s = six.text_type(s)
+        l = six.text_type(l)
+        return cls(h=h, s=s, l=l)
+            
+    def to_string_hsl(self):
+        return u'hsl({},{}%,{}%)'.format(self.h, self.s, self.l)
+        
+    def to_string_any(self):
+        return self.to_string_hsl()
+        
+    @classmethod
+    def from_string(cls, string, **kwargs):
+        raise NotImplementedError()
+        
+    def __eq__(self, other):
+        if isinstance(other, HSLColorNode):
+            return self.h == other.h and self.s == other.s and self.l == other.l
+        return super(HSLColorNode, self).__eq__(other)
+    
     
     
 def _color_node_factory(value):
@@ -407,6 +445,8 @@ def _color_node_factory(value):
         return HexColorNode.from_value(value)
     elif value.format == 'rgb':
         return RGBColorNode.from_value(value)
+    elif value.format == 'hsl':
+        return HSLColorNode.from_value(value)
     else:
         raise RuntimeError()
 

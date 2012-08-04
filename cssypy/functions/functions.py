@@ -13,5 +13,16 @@ def _rgb_arg(x):
 def rgb(r, g, b):
     rgb = tuple(_rgb_arg(x) for x in (r,g,b))
     return datatypes.Color(rgb=rgb, format='rgb')
+    
 
-
+@register_builtin
+def hsl(h, s, l):
+    if not isinstance(h, datatypes.Number):
+        raise errors.CSSValueError()
+    h = (h.n % 360. + 360.) % 360.
+    if not isinstance(s, datatypes.Percentage) or not isinstance(l, datatypes.Percentage):
+        raise errors.CSSValueError()
+    s = s.p / 100.
+    l = l.p / 100.
+    return datatypes.Color(hsl=(h,s,l), format='hsl')
+    

@@ -238,7 +238,7 @@ class Solver_TestCase(base.TestCaseBase):
             )
         self.assertEqual(dump(expected), dump(stylesheet))
     
-    def test_rgb_func(self):
+    def test_rgb_func1(self):
         src = u'prop: rgb(0,0,0) ;'
         parser = parsers.Parser(src)
         self.assertTrue(parser.match(tokens.START))
@@ -249,6 +249,61 @@ class Solver_TestCase(base.TestCaseBase):
             Declaration(
                 prop=Property(name=u'prop'),
                 expr=RGBColorNode(r=u'0', g=u'0', b=u'0'),
+                important=False,
+            )
+        self.assertEqual(dump(expected), dump(decl))
+    
+    def test_rgb_func2(self):
+        src = u'prop: rgb((128+127),50%,101) ;'
+        parser = parsers.Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        decl = parser.declaration()
+        solver = solvers.Solver()
+        decl = solver.visit(decl)
+        expected = \
+            Declaration(
+                prop=Property(name=u'prop'),
+                expr=RGBColorNode(r=u'255', g=u'127.5', b=u'101'),
+                important=False,
+            )
+        self.assertEqual(dump(expected), dump(decl))
+    
+    def test_rgb_func3(self):
+        src = u'prop: rgb(127,"50%",101) ;'
+        parser = parsers.Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        decl = parser.declaration()
+        solver = solvers.Solver()
+        decl = solver.visit(decl)
+        expected = \
+            Declaration(
+                prop=Property(name=u'prop'),
+                expr=FunctionExpr(
+                    name=u'rgb',
+                    expr=NaryOpExpr(
+                        op=CommaOp(),
+                        operands=[
+                            NumberNode(number=u'127'),
+                            StringNode(string=u'50%'),
+                            NumberNode(number=u'101'),
+                        ]
+                    )
+                ),
+                important=False,
+            )
+        self.assertEqual(dump(expected), dump(decl))
+    
+    def test_hsl_func1(self):
+        src = u'prop: hsl(0,0%,0%) ;'
+        parser = parsers.Parser(src)
+        self.assertTrue(parser.match(tokens.START))
+        decl = parser.declaration()
+        solver = solvers.Solver()
+        decl = solver.visit(decl)
+        expected = \
+            Declaration(
+                prop=Property(name=u'prop'),
+                expr=HSLColorNode(h=u'0.0', s=u'0.0', l=u'0.0'),
                 important=False,
             )
         self.assertEqual(dump(expected), dump(decl))

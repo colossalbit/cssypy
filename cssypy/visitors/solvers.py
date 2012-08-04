@@ -204,6 +204,10 @@ class Solver(NodeTransformer):
         # 2.a. handle error on conversion
         #   - no to_value() method - not an error
         #   - error raised by to_value() - (probably an error--just like if to_value fails elsewhere)
+        #       - If error is an error of conversion, not an error
+        #       - If error is an error during calculations (for instance, if an 
+        #         arg involves addition of two terms whose types do not support 
+        #         addition), it is an error?
         try:
             args = tuple(self.node_as_value(x) for x in operands)
         except Exception:
