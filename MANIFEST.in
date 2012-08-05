@@ -2,11 +2,15 @@ include LICENSE
 include MANIFEST.in
 include README.rst
 include requirements.pip
+include tox.ini
+include coverage.css
+
 include distribute_setup.py
 include runcoverage.py
 include runtests.py
 
 recursive-include cssypy *.py
 recursive-include docs *
+recursive-include cssypy/tests/data *
 
 prune docs/build
