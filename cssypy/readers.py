@@ -114,8 +114,9 @@ re_string_charset = re.compile(ur'^@charset "(?P<name>[^\n\r"])";', re.UNICODE)
 
 #==============================================================================#
 class Reader(object):
-    def __init__(self, filename='<unknown>'):
+    def __init__(self, filename='<unknown>', default_encoding=None):
         self._filename = filename
+        self._default_encoding = default_encoding or defs.DEFAULT_ENCODING
     
     def read(self):
         """Return data as unicode."""
@@ -123,6 +124,9 @@ class Reader(object):
     
     def encoding(self):
         raise NotImplementedError() # pragma: no cover
+    
+    def default_encoding(self):
+        return self._default_encoding
     
     def charset_rule_required(self):
         # return true if the parser must parse an apprioriate charset rule 
@@ -149,11 +153,11 @@ class Reader(object):
         
 #==============================================================================#
 class EncodedReader(Reader):
-    def __init__(self, filename='<unknown>', source_encoding=None, 
-                 default_encoding=defs.DEFAULT_ENCODING):
-        super(EncodedReader, self).__init__(filename)
+    def __init__(self, filename=None, source_encoding=None, 
+                 default_encoding=None):
+        filename = filename or '<unknown>'
+        super(EncodedReader, self).__init__(filename, default_encoding)
         self.source_encoding = source_encoding
-        self.default_encoding = default_encoding or defs.DEFAULT_ENCODING
         self._encoding = None
         self._charset_rule_required = False
         self._forced_encoding = source_encoding is not None
@@ -191,7 +195,7 @@ class EncodedReader(Reader):
             if content:
                 encoding = self.encoding_from_content(content)
         if not encoding:
-            encoding = self.default_encoding
+            encoding = self.default_encoding()
         if not self._is_known_encoding(encoding):
             msg = self._bad_encoding_message(encoding)
             raise errors.CSSEncodingNotFound(msg)
@@ -207,12 +211,8 @@ class EncodedReader(Reader):
 #==============================================================================#
 class StreamReader(EncodedReader):
     def __init__(self, stream, filename=None, source_encoding=None, 
-                 default_encoding=defs.DEFAULT_ENCODING, do_decoding=True):
-        if not filename:
-            try:
-                filename = stream.name
-            except AttributeError:
-                filename = '<unknown>'
+                 default_encoding=None, do_decoding=True):
+        filename = filename or getattr(stream, 'name', '<unknown>')
         super(StreamReader, self).__init__(filename, 
                                            source_encoding=source_encoding, 
                                            default_encoding=default_encoding)
@@ -243,11 +243,10 @@ class StreamReader(EncodedReader):
         
 #==============================================================================#
 class FileReader(EncodedReader):
-    def __init__(self, filename, source_encoding=None, 
-                 default_encoding=defs.DEFAULT_ENCODING):
+    def __init__(self, filename, source_encoding=None, default_encoding=None):
         super(FileReader, self).__init__(filename=filename, 
                                          source_encoding=source_encoding, 
-                                         default_encoding=source_encoding)
+                                         default_encoding=default_encoding)
         
     def get_content_for_encoding_check(self, size):
         # Called by base class when determining the encoding used.
@@ -265,11 +264,10 @@ class FileReader(EncodedReader):
 #==============================================================================#
 class StringReader(Reader):
     def __init__(self, data, filename='<string>', source_encoding=None, 
-                 default_encoding=defs.DEFAULT_ENCODING):
-        super(StringReader, self).__init__(filename)
+                 default_encoding=None):
+        super(StringReader, self).__init__(filename, default_encoding)
         self._charset_rule_required = False
         self._encoding = source_encoding
-        self._default_encoding = default_encoding
         self._forced_encoding = source_encoding is not None
         self._data = data
         
@@ -285,7 +283,7 @@ class StringReader(Reader):
                 raise errors.CSSEncodingNotFound(msg)
             self._charset_rule_required = True
             return encoding
-        return self._default_encoding
+        return self.default_encoding()
         
     def encoding(self):
         if not self._encoding:

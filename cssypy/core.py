@@ -8,16 +8,22 @@ import six
 from . import processors, parsers, optionsdict
 
 #==============================================================================#
-def compile_string(src, do_solve=True, do_imports=True, 
-                   propagate_exceptions=True):
-    options = {
-        'ENABLE_SOLVE': do_solve,
-        'ENABLE_IMPORTS': do_imports,
-        'PROPAGATE_EXCEPTIONS': propagate_exceptions,
-    }
+def compile_string(src, source_encoding=None, dest_encoding=None, 
+                   default_encoding=None, import_directories=None, 
+                   options=None, reporter=None):
+    options = options or {}
+    if isinstance(options, dict):
+        options.setdefault('ENABLE_SOLVE', True)
+        options.setdefault('ENABLE_IMPORTS', True)
+        options.setdefault('PROPAGATE_EXCEPTIONS', True)
+    else:
+        raise RuntimeError() # TODO
+    
     options = optionsdict.Options(options)
-    proc = processors.Processor(options=options)
-    proc.parse_string(src)
+    proc = processors.Processor(default_encoding=default_encoding, 
+                                import_directories=import_directories, 
+                                options=options, reporter=reporter)
+    proc.parse_string(src, source_encoding=source_encoding)
     proc.process_imports()
     proc.apply_transforms()
     return proc.write_string()
@@ -60,3 +66,6 @@ def compile(ifile, ofile, ifilename=None, ofilename=None, source_encoding=None,
         proc.write_stream(ofile, filename=ofilename, encoding=dest_encoding)
     else:
         proc.write(ofile, encoding=dest_encoding)
+
+#==============================================================================#
+

@@ -60,7 +60,7 @@ class ImportResolver(object):
             finder = FileRelativeFinder(os.path.dirname(toplevel_filename))
             self.finders.append(finder)
             
-        self.finders.extend(self.options.IMPORT_FINDERS)
+        self.finders.extend(finder() for finder in self.options.IMPORT_FINDERS)
         self.finders.append(DirectoryListFinder(import_directories))
         
     def resolve(self, filename):
@@ -154,8 +154,11 @@ class Processor(object):
     
     def __init__(self, default_encoding=None, Importer=None, Parser=None, 
                  import_directories=None, options=None, reporter=None):
+        if isinstance(options, dict):
+            options = optionsdict.Options(options)
         self.options = options or optionsdict.Options()
         assert isinstance(self.options, optionsdict.Options)
+        
         self.reporter = reporter or reporters.NullReporter()
         default_encoding = default_encoding or defs.DEFAULT_ENCODING
         
@@ -187,11 +190,15 @@ class Processor(object):
                                             do_decoding=do_decoding)
         except errors.CSSSyntaxError as e:
             self.on_syntax_error(e)
-        # TODO: catch other exceptions from importer.parse()
+        # TODO: catch other exceptions from wrapper.parse()
         return self.stylesheet
     
     def parse_string(self, data, filename='<string>', source_encoding=None, 
                      default_encoding=None):
+        """Parse a string as a stylesheet. The string must be a unicode string. 
+        The encoding arguments are not used to decode the string (as it is 
+        already unicode).
+        """
         try:
             self.stylesheet = self.parser_wrapper.parse_string(data, 
                                             filename=filename, 
@@ -199,7 +206,7 @@ class Processor(object):
                                             default_encoding=default_encoding)
         except errors.CSSSyntaxError as e:
             self.on_syntax_error(e)
-        # TODO: catch other exceptions from importer.parse_string()
+        # TODO: catch other exceptions from wrapper.parse_string()
         return self.stylesheet
         
     def process_imports(self):
@@ -247,6 +254,7 @@ class Processor(object):
         writer.visit(self.stylesheet.rootnode)
     
     def write_string(self):
+        """Write the processed stylesheet to a unicode string."""
         assert self.stylesheet
         stream = io.StringIO()
         writer = formattervisitors.CSSFormatterVisitor(stream)

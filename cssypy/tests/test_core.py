@@ -146,38 +146,38 @@ class CompileString_TestCase(base.TestCaseBase):
     def test_syntax_error2(self):
         src = u'selector. class'
         with self.assertRaises(SystemExit):
-            core.compile_string(src, propagate_exceptions=False)
+            core.compile_string(src, options={'PROPAGATE_EXCEPTIONS': False})
 
 #==============================================================================#
 class CompileString_NoSolvers_TestCase(base.TestCaseBase):
     def test_paren1(self):
         src = u'selector { rule: 1*(2+3) } '
         expect = u'selector { rule: 1*(2+3); }'
-        r = core.compile_string(src, do_solve=False)
+        r = core.compile_string(src, options={'ENABLE_SOLVE': False})
         self.assertEqual(expect, normalize(r))
     
     def test_paren2(self):
         src = u'selector { rule: 1+(2-3) } '
         expect = u'selector { rule: 1+(2-3); }'
-        r = core.compile_string(src, do_solve=False)
+        r = core.compile_string(src, options={'ENABLE_SOLVE': False})
         self.assertEqual(expect, normalize(r))
     
     def test_unnecessary_paren1(self):
         src = u'selector { rule: (1+2)+3 } '
         expect = u'selector { rule: 1+2+3; }'
-        r = core.compile_string(src, do_solve=False)
+        r = core.compile_string(src, options={'ENABLE_SOLVE': False})
         self.assertEqual(expect, normalize(r))
     
     def test_unnecessary_paren2(self):
         src = u'selector { rule: (1*2)+3 } '
         expect = u'selector { rule: 1*2+3; }'
-        r = core.compile_string(src, do_solve=False)
+        r = core.compile_string(src, options={'ENABLE_SOLVE': False})
         self.assertEqual(expect, normalize(r))
     
     def test_unnecessary_paren3(self):
         src = u'selector { rule: (5) } '
         expect = u'selector { rule: 5; }'
-        r = core.compile_string(src, do_solve=False)
+        r = core.compile_string(src, options={'ENABLE_SOLVE': False})
         self.assertEqual(expect, normalize(r))
         
 
@@ -186,7 +186,7 @@ class CompileString_NoImporters_TestCase(base.TestCaseBase):
     def test_empty(self):
         src = u''
         expect = u''
-        r = core.compile_string(src, do_imports=False)
+        r = core.compile_string(src, options={'ENABLE_IMPORTS': False})
         self.assertEqual(expect, normalize(r))
 
 
