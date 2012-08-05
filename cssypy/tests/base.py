@@ -4,9 +4,14 @@ from __future__ import print_function
 import unittest
 import tempfile
 import os
+import os.path
+
+DATADIR = 'data'
 
 
 class TestCaseBase(unittest.TestCase):
+    DATAPATH = os.path.join(os.path.dirname(__file__), DATADIR)
+    
     def setUp(self):
         super(TestCaseBase, self).setUp()
         self.tempfiles = []

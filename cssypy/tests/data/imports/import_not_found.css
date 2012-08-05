@@ -1,0 +1,5 @@
+@import "this_stylesheet_does_not_exist.css";
+
+.something {
+    color: rgb(255,0,0);
+}

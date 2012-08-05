@@ -27,7 +27,7 @@ def main():
     import cssypy.runtests
     cssypy.runtests.main()
     cov.stop()
-    cov.html_report(directory=HTMLPATH)
+    cov.html_report(directory=HTMLPATH, extra_css='coverage.css')
 
 main()
 

@@ -161,6 +161,18 @@ class CompileString_NoSolvers_TestCase(base.TestCaseBase):
         expect = u'selector { rule: 1+(2-3); }'
         r = core.compile_string(src, options={'ENABLE_SOLVE': False})
         self.assertEqual(expect, normalize(r))
+        
+    def test_paren3(self):
+        src = u'selector { rule: (2+3)*1; } '
+        expect = u'selector { rule: (2+3)*1; }'
+        r = core.compile_string(src, options={'ENABLE_SOLVE': False})
+        self.assertEqual(expect, normalize(r))
+        
+    def test_paren4(self):
+        src = u'selector { rule: -(-1); } '
+        expect = u'selector { rule: -(-1); }'
+        r = core.compile_string(src, options={'ENABLE_SOLVE': False})
+        self.assertEqual(expect, normalize(r))
     
     def test_unnecessary_paren1(self):
         src = u'selector { rule: (1+2)+3 } '

@@ -1,0 +1,4 @@
+
+/* Added decimal places to fix alignment of lines and line numbers in Chrome. */
+p { line-height: 1.33333333333333em; }
+
